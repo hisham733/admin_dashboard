@@ -4,6 +4,7 @@ const HttpStatus = Object.freeze({
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   SERVER_ERROR: 500,
+  VALIDATION_ERROR: 422,
 
   getLabel(status) {
     const labels = {
@@ -11,6 +12,7 @@ const HttpStatus = Object.freeze({
       401: "UNAUTHORIZED",
       403: "FORBIDDEN",
       404: "NOT_FOUND",
+      422: "VALIDATION ERROR",
       500: "SERVER_ERROR"
     };
 

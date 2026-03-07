@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const session = require('express-session'); 
 const path = require('path');
+const errorHandler = require('./middlewares/error.middleware'); 
 
 app.use(session({  
       secret: "super-secret-key",   
@@ -21,6 +22,8 @@ app.set('views', path.join(__dirname, '../views'));
 const dashboard = require('./routes/dashboard.route');
 const form = require('./routes/form.route');
 const auth = require('./routes/auth.route');
+const user = require('./routes/user.route');
+const role = require('./routes/role.route');
 
 // Body parser (built-in)
 app.use(express.json());
@@ -29,7 +32,12 @@ app.use(express.urlencoded({ extended: true }));
 
 //
 app.use('/dashboard', dashboard);  
-app.use('/',auth);  
+app.use('/', auth);  
+app.use('/user', user); 
+app.use('/role', role);
 app.use('/form', form);
+
+//error handler middleware 
+app.use(errorHandler);
 
 module.exports = app;

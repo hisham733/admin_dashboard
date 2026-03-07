@@ -1,5 +1,6 @@
 const prisma = require('../configs/prisma');
-const bcrypt = require('bcrypt');
+const VALIDATION_ERROR = require('../errors/validation.error');
+const {hashedPassword} = require('../utilities');
 
 async function register(name, email, password, confirmPassword) {
   const existingUser = await prisma.user.findUnique({
@@ -7,7 +8,7 @@ async function register(name, email, password, confirmPassword) {
   });
   
   if (existingUser) {
-    throw new Error('User already exists');
+    throw new VALIDATION_ERROR('User already exists');
   }
 
   const role = await prisma.role.findUnique({
@@ -15,11 +16,11 @@ async function register(name, email, password, confirmPassword) {
   });
 
   if (!role) {
-    throw new Error('Role not found');
+    throw new VALIDATION_ERROR('Role not found');
   }
 
   if(password !== confirmPassword) {  
-      throw new Error('Confirm password not matching the password'); 
+      throw new VALIDATION_ERROR('Confirm password not matching the password'); 
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -50,19 +51,30 @@ async function login(email, password) {
   });
 
   if (!user) {
-    throw new Error('Incorrect email or password');
+    throw new VALIDATION_ERROR('Incorrect email or password');
   }
 
-  const valid = await bcrypt.compare(password, user.password);
+  const valid = await hashedPassword(password);
 
   if (!valid) {
-    throw new Error('Incorrect email or password');
+    throw new VALIDATION_ERROR('Incorrect email or password');
   }
 
   return user;
 }
 
+async function logout(session)  {  
+
+   session.destroy((err) => {
+    if (err) {
+      console.log(err); 
+      return res.status(500).send('Could not log out');
+    }
+  });
+}
+
 module.exports = {
   register,
-  login
+  login,
+  logout
 };
