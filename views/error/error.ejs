@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error — Form Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink:   #0d0d14;
+            --card:  #13131c;
+            --card2: #1a1a26;
+            --line:  #22223a;
+            --gold:  #f5c842;
+            --coral: #ff6f61;
+            --text:  #e2e2f0;
+            --muted: #6b6b8f;
+            --r:     14px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Outfit',sans-serif;
+            background:var(--ink);
+            color:var(--text);
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+        }
+        body::before {
+            content:'';
+            position:fixed; inset:0;
+            background-image:
+                linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+                linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+            background-size:44px 44px;
+            pointer-events:none;
+        }
+        body::after {
+            content:'';
+            position:fixed; inset:0;
+            background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,111,97,.06) 0%, transparent 70%);
+            pointer-events:none;
+        }
+
+        /* ── Header ── */
+        .hdr {
+            padding:24px 36px;
+            border-bottom:1px solid var(--line);
+            background:var(--card);
+            display:flex; align-items:flex-end;
+            justify-content:space-between; gap:16px;
+            position:relative; z-index:1;
+        }
+        .hdr h1 {
+            font-family:'Bebas Neue',sans-serif;
+            font-size:clamp(24px,4vw,42px);
+            letter-spacing:2px; color:#fff; line-height:1;
+        }
+        .hdr h1 em { color:var(--gold); font-style:normal; }
+        .hdr p { font-size:12px; color:var(--muted); margin-top:4px; }
+
+        .err-pill {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:4px 12px; border-radius:20px; font-size:11px;
+            background:rgba(255,111,97,.1);
+            border:1px solid rgba(255,111,97,.25);
+            color:var(--coral); white-space:nowrap;
+        }
+        .err-pill-dot {
+            width:6px; height:6px; border-radius:50%;
+            background:var(--coral);
+            animation:pulse 1.5s ease-in-out infinite;
+        }
+
+        /* ── Main ── */
+        .wrap {
+            padding:28px 36px;
+            max-width:860px;
+            margin:0 auto;
+            width:100%;
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            position:relative; z-index:1;
+        }
+
+        .section-label {
+            font-family:'Bebas Neue',sans-serif;
+            font-size:13px; letter-spacing:3px;
+            color:var(--muted); text-transform:uppercase;
+            margin-bottom:14px;
+            display:flex; align-items:center; gap:10px;
+        }
+        .section-label::after { content:''; flex:1; height:1px; background:var(--line); }
+
+        /* ── Error hero card ── */
+        .error-hero {
+            background:var(--card);
+            border:1px solid rgba(255,111,97,.25);
+            border-radius:var(--r);
+            padding:40px 36px;
+            margin-bottom:20px;
+            position:relative;
+            overflow:hidden;
+            animation:fadeUp .5s cubic-bezier(.34,1.2,.64,1) both;
+        }
+        .error-hero::before {
+            content:'';
+            position:absolute; top:0; left:0; right:0;
+            height:3px;
+            background:linear-gradient(90deg, var(--coral), rgba(255,111,97,.2));
+        }
+        .error-hero-bg {
+            position:absolute;
+            top:-20px; right:-30px;
+            font-family:'Bebas Neue',sans-serif;
+            font-size:200px; line-height:1;
+            color:rgba(255,111,97,.04);
+            pointer-events:none;
+            user-select:none;
+            letter-spacing:-8px;
+        }
+
+        .error-top {
+            display:flex; align-items:flex-start;
+            gap:22px; margin-bottom:28px;
+        }
+        .error-icon-wrap {
+            flex-shrink:0;
+            width:64px; height:64px; border-radius:18px;
+            background:rgba(255,111,97,.08);
+            border:1px solid rgba(255,111,97,.2);
+            display:flex; align-items:center; justify-content:center;
+            font-size:28px;
+            animation:shakeOnce .6s .3s both;
+        }
+        .error-headline { flex:1; }
+        .error-headline h2 {
+            font-family:'Bebas Neue',sans-serif;
+            font-size:clamp(28px,5vw,46px);
+            letter-spacing:2px; line-height:1;
+            color:#fff; margin-bottom:6px;
+        }
+        .error-headline h2 span { color:var(--coral); }
+        .error-headline p {
+            font-size:13px; color:var(--muted); line-height:1.6;
+        }
+
+        /* ── Detail blocks ── */
+        .detail-grid {
+            display:grid;
+            grid-template-columns:200px 1fr;
+            gap:14px;
+        }
+        .detail-block {
+            background:var(--card2);
+            border:1px solid var(--line);
+            border-radius:11px;
+            padding:18px 20px;
+            animation:fadeUp .4s both;
+        }
+        .detail-block-label {
+            font-size:10px; text-transform:uppercase;
+            letter-spacing:1.8px; color:var(--muted);
+            margin-bottom:10px;
+            display:flex; align-items:center; gap:7px;
+        }
+        .detail-block-label .dot {
+            width:5px; height:5px; border-radius:50%;
+            background:var(--coral); flex-shrink:0;
+        }
+
+        .status-code {
+            font-family:'Bebas Neue',sans-serif;
+            font-size:52px; letter-spacing:3px;
+            line-height:1; color:var(--coral);
+        }
+        .status-label {
+            font-size:12px; color:var(--muted);
+            margin-top:4px; font-weight:500;
+            text-transform:uppercase; letter-spacing:1px;
+        }
+
+        .message-text {
+            font-size:14px; color:var(--text);
+            line-height:1.7; word-break:break-word;
+        }
+
+        /* ── Actions ── */
+        .actions-card {
+            background:var(--card);
+            border:1px solid var(--line);
+            border-radius:var(--r);
+            padding:20px 22px;
+            display:flex; align-items:center;
+            justify-content:space-between; gap:14px;
+            animation:fadeUp .4s .2s both;
+        }
+        .actions-info { font-size:12px; color:var(--muted); }
+        .actions-info strong {
+            color:var(--text); font-size:14px;
+            display:block; margin-bottom:2px;
+        }
+        .btn-group { display:flex; gap:10px; }
+
+        .btn-primary {
+            padding:12px 28px; border-radius:10px; border:none;
+            background:var(--gold); color:#0d0d14;
+            font-family:'Bebas Neue',sans-serif; font-size:18px;
+            letter-spacing:1px; cursor:pointer; transition:all .2s;
+            display:inline-flex; align-items:center; gap:8px;
+            white-space:nowrap; text-decoration:none;
+        }
+        .btn-primary:hover {
+            background:#d4b030;
+            box-shadow:0 6px 20px rgba(245,200,66,.3);
+            transform:translateY(-1px);
+        }
+        .btn-secondary {
+            padding:12px 22px; border-radius:10px;
+            border:1px solid var(--line); background:transparent;
+            color:var(--muted); font-family:'Outfit',sans-serif;
+            font-size:13px; cursor:pointer; transition:all .2s;
+            text-decoration:none; display:inline-flex; align-items:center;
+        }
+        .btn-secondary:hover { color:var(--text); background:var(--card2); }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(14px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+        @keyframes shakeOnce {
+            0%,100% { transform:rotate(0deg); }
+            20%     { transform:rotate(-8deg); }
+            40%     { transform:rotate(7deg); }
+            60%     { transform:rotate(-5deg); }
+            80%     { transform:rotate(3deg); }
+        }
+        @keyframes pulse {
+            0%,100% { opacity:1; }
+            50%     { opacity:.35; }
+        }
+
+        ::-webkit-scrollbar { width:4px; }
+        ::-webkit-scrollbar-track { background:var(--ink); }
+        ::-webkit-scrollbar-thumb { background:var(--line); border-radius:2px; }
+
+        @media(max-width:600px) {
+            .detail-grid { grid-template-columns:1fr; }
+            .wrap { padding:18px 16px; }
+            .hdr { padding:20px 16px; }
+            .error-hero { padding:28px 22px; }
+            .error-top { flex-direction:column; gap:14px; }
+            .actions-card { flex-direction:column; align-items:stretch; }
+            .btn-group { flex-direction:column; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="hdr">
+    <div>
+        <h1>Form <em>Builder</em></h1>
+        <p>Design your custom order form template</p>
+    </div>
+    <span class="err-pill">
+        <span class="err-pill-dot"></span>
+        Error Encountered
+    </span>
+</header>
+
+<main class="wrap">
+
+    <div class="section-label">Error Details</div>
+
+    <div class="error-hero">
+
+        <!-- Ghost status code in background -->
+        <div class="error-hero-bg"><%= status %></div>
+
+        <div class="error-top">
+            <div class="error-icon-wrap">⚠️</div>
+            <div class="error-headline">
+                <h2>Something <span>went wrong</span></h2>
+                <p>The server returned an error while processing your request. Please review the details below.</p>
+            </div>
+        </div>
+
+        <div class="detail-grid">
+
+            <!-- Status code block -->
+            <div class="detail-block" style="animation-delay:.05s">
+                <div class="detail-block-label">
+                    <span class="dot"></span>HTTP Status
+                </div>
+                <div class="status-code"><%= status %></div>
+                <div class="status-label"><%= label %></div>
+            </div>
+
+            <!-- Message block -->
+            <div class="detail-block" style="animation-delay:.1s">
+                <div class="detail-block-label">
+                    <span class="dot"></span>Error Message
+                </div>
+                <div class="message-text"><%= message %></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-card">
+        <div class="actions-info">
+            <strong>What would you like to do?</strong>
+            Go back and try again, or return to the dashboard
+        </div>
+        <div class="btn-group">
+            <a class="btn-secondary" href="javascript:history.back()">← Go Back</a>
+            <a class="btn-primary" href="/dashboard">Dashboard →</a>
+        </div>
+    </div>
+
+</main>
+
+</body>
+</html>

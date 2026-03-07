@@ -1,0 +1,28 @@
+{
+  "name": "admin-dashboard",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/seeders/seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.2",
+    "dotenv": "^17.3.1",
+    "ejs": "^4.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "express-validator": "^7.3.1",
+    "mysql2": "^3.17.3",
+    "nodemon": "^3.1.14",
+    "prisma": "^6.19.2"
+  }
+}

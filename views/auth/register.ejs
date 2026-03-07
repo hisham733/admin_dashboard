@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — Orders Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink:   #0d0d14;
+            --card:  #13131c;
+            --card2: #1a1a26;
+            --line:  #22223a;
+            --gold:  #f5c842;
+            --sky:   #4fc3f7;
+            --coral: #ff6f61;
+            --mint:  #56e39f;
+            --lilac: #c084fc;
+            --text:  #e2e2f0;
+            --muted: #6b6b8f;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Outfit',sans-serif;
+            background:var(--ink);
+            color:var(--text);
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:40px 20px;
+        }
+        body::before {
+            content:'';
+            position:fixed; inset:0;
+            background-image:
+                linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+                linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+            background-size:44px 44px;
+            pointer-events:none;
+        }
+        .orb1 {
+            position:fixed; width:500px; height:500px; border-radius:50%;
+            background:radial-gradient(circle,rgba(192,132,252,.05) 0%,transparent 70%);
+            top:-80px; right:-80px; pointer-events:none;
+        }
+        .orb2 {
+            position:fixed; width:400px; height:400px; border-radius:50%;
+            background:radial-gradient(circle,rgba(245,200,66,.05) 0%,transparent 70%);
+            bottom:-80px; left:-80px; pointer-events:none;
+        }
+
+        .wrap {
+            width:100%; max-width:480px;
+            animation:fadeUp .5s cubic-bezier(.34,1.3,.64,1) both;
+        }
+        @keyframes fadeUp {
+            from{opacity:0;transform:translateY(24px);}
+            to{opacity:1;transform:translateY(0);}
+        }
+
+        /* Brand */
+        .brand { text-align:center; margin-bottom:28px; }
+        .brand-icon {
+            width:52px; height:52px; background:var(--gold);
+            border-radius:14px; display:inline-flex;
+            align-items:center; justify-content:center;
+            font-size:24px; margin-bottom:12px;
+            box-shadow:0 8px 28px rgba(245,200,66,.3);
+            animation:fadeUp .5s .1s both;
+        }
+        .brand h1 {
+            font-family:'Bebas Neue',sans-serif;
+            font-size:36px; letter-spacing:2px; color:#fff; line-height:1;
+            animation:fadeUp .5s .15s both;
+        }
+        .brand h1 em { color:var(--gold); font-style:normal; }
+        .brand p { font-size:12px; color:var(--muted); margin-top:5px; animation:fadeUp .5s .2s both; }
+
+        /* Card */
+        .card {
+            background:var(--card); border:1px solid var(--line);
+            border-radius:18px; padding:32px;
+            animation:fadeUp .5s .25s both;
+        }
+        .card-header {
+            display:flex; align-items:center;
+            justify-content:space-between; margin-bottom:24px;
+        }
+        .card-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; }
+
+        .step-pill {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:4px 12px; border-radius:20px; font-size:11px;
+            background:rgba(192,132,252,.1);
+            border:1px solid rgba(192,132,252,.25);
+            color:var(--lilac);
+        }
+
+        /* Alert */
+        .alert {
+            padding:10px 14px; border-radius:8px;
+            font-size:12px; margin-bottom:16px;
+            display:none; align-items:center; gap:8px;
+        }
+        .alert.error {
+            background:rgba(255,111,97,.08);
+            border:1px solid rgba(255,111,97,.25);
+            color:var(--coral);
+        }
+        .alert.show { display:flex; }
+
+        /* Form grid */
+        .fgrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .fg { display:flex; flex-direction:column; gap:5px; margin-bottom:16px; }
+        .fg.full { grid-column:span 2; }
+        .flabel { font-size:10px; text-transform:uppercase; letter-spacing:1.4px; color:var(--muted); }
+        .input-wrap { position:relative; }
+        .input-icon {
+            position:absolute; left:13px; top:50%;
+            transform:translateY(-50%);
+            font-size:14px; color:var(--muted); pointer-events:none;
+        }
+        .finput {
+            width:100%; padding:11px 13px 11px 40px;
+            background:var(--card2); border:1px solid var(--line);
+            border-radius:10px; color:var(--text);
+            font-family:'Outfit',sans-serif; font-size:13px;
+            outline:none; transition:border-color .2s, box-shadow .2s;
+        }
+        .finput:focus {
+            border-color:var(--gold);
+            box-shadow:0 0 0 3px rgba(245,200,66,.08);
+        }
+        .finput::placeholder { color:var(--muted); }
+        .show-pass {
+            position:absolute; right:12px; top:50%;
+            transform:translateY(-50%); background:none;
+            border:none; color:var(--muted); cursor:pointer;
+            font-size:14px; padding:4px; transition:color .2s;
+        }
+        .show-pass:hover { color:var(--text); }
+
+        /* Password strength */
+        .strength-wrap { margin-top:6px; }
+        .strength-bar {
+            height:3px; background:var(--line);
+            border-radius:2px; overflow:hidden;
+        }
+        .strength-fill {
+            height:100%; border-radius:2px;
+            width:0%; transition:width .3s, background .3s;
+        }
+        .strength-label {
+            font-size:10px; color:var(--muted);
+            margin-top:4px; letter-spacing:.5px;
+        }
+
+        /* Divider */
+        .section-div {
+            font-family:'Bebas Neue',sans-serif;
+            font-size:11px; letter-spacing:2.5px;
+            color:var(--muted); margin:20px 0 16px;
+            display:flex; align-items:center; gap:10px;
+        }
+        .section-div::after {
+            content:''; flex:1; height:1px; background:var(--line);
+        }
+
+        /* Terms */
+        .terms {
+            display:flex; align-items:flex-start;
+            gap:10px; margin-bottom:22px; cursor:pointer;
+        }
+        .terms input[type="checkbox"] {
+            width:15px; height:15px; accent-color:var(--gold);
+            cursor:pointer; margin-top:1px; flex-shrink:0;
+        }
+        .terms span { font-size:12px; color:var(--muted); line-height:1.5; }
+        .terms span a { color:var(--gold); text-decoration:none; }
+        .terms span a:hover { opacity:.7; }
+
+        /* Submit */
+        .btn-submit {
+            width:100%; padding:13px; border-radius:10px;
+            border:none; background:var(--gold); color:#0d0d14;
+            font-family:'Bebas Neue',sans-serif; font-size:18px;
+            letter-spacing:1px; cursor:pointer; transition:all .2s;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+        }
+        .btn-submit:hover {
+            background:#d4b030;
+            box-shadow:0 6px 20px rgba(245,200,66,.3);
+            transform:translateY(-1px);
+        }
+        .btn-submit:active { transform:translateY(0); }
+
+        .card-footer {
+            text-align:center; margin-top:20px;
+            font-size:12px; color:var(--muted);
+            animation:fadeUp .5s .3s both;
+        }
+        .card-footer a {
+            color:var(--gold); text-decoration:none;
+            font-weight:600; transition:opacity .2s;
+        }
+        .card-footer a:hover { opacity:.7; }
+
+        ::-webkit-scrollbar{width:4px;}
+        ::-webkit-scrollbar-track{background:var(--ink);}
+        ::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px;}
+
+        @media(max-width:500px) {
+            .fgrid { grid-template-columns:1fr; }
+            .fg.full { grid-column:span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="orb1"></div>
+<div class="orb2"></div>
+
+<div class="wrap">
+
+    <div class="brand">
+        <div class="brand-icon">📦</div>
+        <h1>Orders <em>Dashboard</em></h1>
+        <p>Create your account to get started</p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">Create Account</span>
+            <span class="step-pill">✦ New User</span>
+        </div>
+
+        <!-- Server-side error -->
+        <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert error show">⚠️ <%= error %></div>
+        <% } %>
+
+        <form action="/register" method="POST" onsubmit="return validateForm()">
+
+            <div class="section-div">Personal Info</div>
+
+            <div class="fgrid">
+                <div class="fg full">
+                    <label class="flabel">Name</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">👤</span>
+                        <input class="finput" type="text" name="name"
+                            placeholder="John Doe" required>
+                    </div>
+                </div>
+                <div class="fg full">
+                    <label class="flabel">Email Address</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">✉</span>
+                        <input class="finput" type="email" name="email"
+                            placeholder="you@example.com" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-div">Security</div>
+
+            <div class="fgrid">
+                <div class="fg full">
+                    <label class="flabel">Password</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔒</span>
+                        <input class="finput" type="password" name="password"
+                            id="passInput" placeholder="Min. 8 characters"
+                            oninput="checkStrength(this.value)" required>
+                        <button type="button" class="show-pass" onclick="togglePass('passInput','eye1')" id="eye1">👁</button>
+                    </div>
+                    <div class="strength-wrap">
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthBar"></div>
+                        </div>
+                        <div class="strength-label" id="strengthLabel">Enter a password</div>
+                    </div>
+                </div>
+                <div class="fg full">
+                    <label class="flabel">Confirm Password</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">🔒</span>
+                        <input class="finput" type="password" name="confirm_password"
+                            id="confirmInput" placeholder="Repeat your password" required>
+                        <button type="button" class="show-pass" onclick="togglePass('confirmInput','eye2')" id="eye2">👁</button>
+                    </div>
+                </div>
+            </div>
+
+            <label class="terms">
+                <input type="checkbox" id="termsCheck" required>
+                <span>
+                    I agree to the <a href="/terms">Terms of Service</a>
+                    and <a href="/privacy">Privacy Policy</a>
+                </span>
+            </label>
+
+            <button type="submit" class="btn-submit">
+                Create Account →
+            </button>
+
+        </form>
+    </div>
+
+    <div class="card-footer">
+        Already have an account? <a href="/">Sign in</a>
+    </div>
+
+</div>
+
+<script>
+    function togglePass(inputId, btnId) {
+        var input = document.getElementById(inputId);
+        var btn   = document.getElementById(btnId);
+        input.type = input.type === 'password' ? 'text' : 'password';
+        btn.textContent = input.type === 'password' ? '👁' : '🙈';
+    }
+
+    function checkStrength(val) {
+        var bar   = document.getElementById('strengthBar');
+        var label = document.getElementById('strengthLabel');
+        var score = 0;
+
+        if (val.length >= 8)                score++;
+        if (/[A-Z]/.test(val))              score++;
+        if (/[0-9]/.test(val))              score++;
+        if (/[^A-Za-z0-9]/.test(val))       score++;
+
+        var levels = [
+            { pct:'0%',   color:'var(--line)',  text:'Enter a password' },
+            { pct:'25%',  color:'var(--coral)', text:'Weak' },
+            { pct:'50%',  color:'var(--gold)',  text:'Fair' },
+            { pct:'75%',  color:'var(--sky)',   text:'Good' },
+            { pct:'100%', color:'var(--mint)',  text:'Strong ✓' },
+        ];
+
+        var level = val.length === 0 ? levels[0] : levels[score];
+        bar.style.width      = level.pct;
+        bar.style.background = level.color;
+        label.textContent    = level.text;
+        label.style.color    = level.color === 'var(--line)' ? 'var(--muted)' : level.color;
+    }
+
+    function validateForm() {
+        var pass    = document.getElementById('passInput').value;
+        var confirm = document.getElementById('confirmInput').value;
+        if (pass !== confirm) {
+            alert('Passwords do not match.');
+            return false;
+        }
+        return true;
+    }
+</script>
+
+</body>
+</html>
