@@ -1,6 +1,7 @@
+const bcrypt = require('bcrypt');
 const prisma = require('../configs/prisma');
 const VALIDATION_ERROR = require('../errors/validation.error');
-const {hashedPassword} = require('../utilities');
+const { passwordHash } = require('../utilities');
 
 async function register(name, email, password, confirmPassword) {
   const existingUser = await prisma.user.findUnique({
@@ -23,13 +24,11 @@ async function register(name, email, password, confirmPassword) {
       throw new VALIDATION_ERROR('Confirm password not matching the password'); 
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
   const newUser = await prisma.user.create({
     data: {
       name,
       email,
-      password: hashedPassword,
+      password: await passwordHash(password),
       roleId: role.id
     }
   });
@@ -54,7 +53,7 @@ async function login(email, password) {
     throw new VALIDATION_ERROR('Incorrect email or password');
   }
 
-  const valid = await hashedPassword(password);
+  const valid = await bcrypt.compare(password, user.password);
 
   if (!valid) {
     throw new VALIDATION_ERROR('Incorrect email or password');

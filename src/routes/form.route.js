@@ -1,8 +1,9 @@
-const express = require('express');  
-const formController = require('../controllers/form.controller');  
+const express = require('express');
+const formController = require('../controllers/form.controller');
+const authenticated = require('../middlewares/authenticate.middleware');
 
-router = express.Router(); 
+const router = express.Router();
 
-router.get('/', formController.create)
+router.get('/', authenticated, formController.create);
 
 module.exports = router;  

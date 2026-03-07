@@ -1,0 +1,82 @@
+<div class="section-header">
+  <div>
+    <a href="/role" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Roles</a>
+    <h1 class="page-title">Edit Role: <%= role.name %></h1>
+    <p class="page-subtitle">Update permissions by resource.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert-inline alert-error"><%= error %></div>
+    <% } %>
+    
+    <form action="/role/<%= role.id %>" method="POST" id="roleForm">
+      <input type="hidden" name="_method" value="PATCH">
+      <div class="form-group">
+        <label class="form-label">Role Name</label>
+        <div class="input-wrap">
+          <span class="input-icon">🛡️</span>
+          <input type="text" name="name" class="form-input" value="<%= role.name %>" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Permissions</label>
+        <p class="form-hint">Click a section to expand. Use "Select all" to grant every action for that resource.</p>
+        <div class="permission-groups">
+          <% 
+            var resLabels = { dashboard: 'Dashboard', form: 'Forms', permissions: 'Permissions', role: 'Roles', settings: 'Settings', user: 'Users' };
+            var actionLabels = { list: 'List', view: 'View', create: 'Create', update: 'Update', delete: 'Delete' };
+            var rolePermIds = (role.permissions || []).map(function(p) { return p.id; });
+            var grouped = {};
+            (typeof permissions !== 'undefined' ? permissions : []).forEach(function(p) {
+              var parts = p.name.split(':');
+              var res = parts[0] || 'other';
+              if (!grouped[res]) grouped[res] = [];
+              grouped[res].push({ id: p.id, name: p.name, actionLabel: actionLabels[parts[1]] || parts[1], checked: rolePermIds.indexOf(p.id) !== -1 });
+            });
+            var groupOrder = ['dashboard', 'user', 'role', 'permissions', 'form', 'settings'];
+            groupOrder.forEach(function(resKey) {
+              var items = grouped[resKey];
+              if (!items || !items.length) return;
+              var safeId = resKey.replace(/[^a-z0-9]/g, '_');
+          %>
+          <div class="permission-group" data-group="<%= safeId %>">
+            <div class="permission-group-header" onclick="toggleGroup('<%= safeId %>')">
+              <span class="permission-group-title"><%= resLabels[resKey] || resKey %></span>
+              <button type="button" class="permission-group-toggle" onclick="event.stopPropagation(); selectAllInGroup('<%= safeId %>', true)">Select all</button>
+            </div>
+            <div class="permission-group-body" id="body-<%= safeId %>">
+              <% items.forEach(function(p) { %>
+                <label class="permission-check-item">
+                  <input type="checkbox" name="permissionIds" value="<%= p.id %>" class="perm-cb" data-group="<%= safeId %>" <%= p.checked ? 'checked' : '' %>>
+                  <span><%= p.actionLabel %></span>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/role" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  function toggleGroup(id) {
+    var el = document.getElementById('body-' + id);
+    if (el) el.classList.toggle('collapsed');
+  }
+  function selectAllInGroup(id, checked) {
+    document.querySelectorAll('.perm-cb[data-group="' + id + '"]').forEach(function(cb) { cb.checked = checked; });
+  }
+  window.toggleGroup = toggleGroup;
+  window.selectAllInGroup = selectAllInGroup;
+})();
+</script>

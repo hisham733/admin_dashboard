@@ -2,7 +2,7 @@ const prisma = require('../configs/prisma');
 
 async function seedPermissions() {
 
-  const models = ['user', 'form', 'role', 'permissions'];
+  const models = ['user', 'form', 'role', 'permissions', 'settings'];
   const actions = ['list', 'view', 'create', 'update', 'delete'];
 
   const permissions = models

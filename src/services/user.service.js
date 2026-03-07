@@ -6,23 +6,24 @@ async function getUsers(query) {
 
   const { page, perPage, search, orderBy } = normalizeQuery({ query });
 
-  return buildQuery({
-    prisma,
-    model: "user",
-    page,
-    perPage,
+  const where = search
+    ? { OR: [{ name: { contains: search } }, { email: { contains: search } }] }
+    : {};
+
+  return prisma.user.findMany({
+    where,
+    skip: perPage * (page - 1),
+    take: perPage,
     orderBy: Object.keys(orderBy).length ? orderBy : { id: 'desc' },
-    keyword: search,
-    columns: ["name"]
+    include: { role: true }
   });
 
 }
 
 async function getUser(id) { 
    return prisma.user.findFirst({ 
-        where: {  
-            id: id
-        }
+        where: { id },
+        include: { role: true }
    }); 
 }
 

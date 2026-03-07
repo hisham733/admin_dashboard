@@ -1,0 +1,58 @@
+<header class="top-header">
+  <div class="header-brand">
+    <button type="button" class="btn-sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+      <span id="sidebarToggleCollapse" class="sidebar-toggle-icon"><%- include('icons', { icon: 'menu' }) %></span>
+      <span id="sidebarToggleExpand" class="sidebar-toggle-icon" style="display:none;"><%- include('icons', { icon: 'sidebar-open' }) %></span>
+    </button>
+    <% if (typeof ui !== 'undefined' && ui.logo) { %>
+      <div class="header-logo"><img src="<%= ui.logo %>" alt="Logo"></div>
+    <% } else { %>
+      <div class="header-logo"><%- include('icons', { icon: 'logo' }) %></div>
+    <% } %>
+    <div>
+      <div class="header-title"><%= typeof ui !== 'undefined' ? ui.systemName : 'Admin Console' %></div>
+    </div>
+  </div>
+  
+  <nav class="header-nav">
+    <a href="/dashboard" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'dashboard') ? 'active' : '' %>">Dashboard</a>
+    <a href="/user" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'users') ? 'active' : '' %>">Users</a>
+    <a href="/role" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'roles') ? 'active' : '' %>">Roles</a>
+    <a href="/form" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'forms') ? 'active' : '' %>">Forms</a>
+    <a href="/settings" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'settings') ? 'active' : '' %>">Settings</a>
+  </nav>
+  
+  <div class="header-right">
+    <% if (typeof user !== 'undefined' && user != null) { %>
+      <div class="profile-dropdown">
+        <button type="button" class="profile-dropdown-trigger" id="profileDropdownTrigger" aria-haspopup="true" aria-expanded="false">
+          <div class="sidebar-user-avatar"><%= (user.name || '').charAt(0).toUpperCase() %></div>
+          <div class="sidebar-user-info" style="text-align:left;">
+            <div class="sidebar-user-name"><%= user.name || '' %></div>
+            <div class="sidebar-user-role"><%= (user.role && user.role.name) ? user.role.name.toUpperCase() : 'USER' %></div>
+          </div>
+          <span class="profile-dropdown-chevron">▼</span>
+        </button>
+        <div class="profile-dropdown-menu" id="profileDropdownMenu" role="menu">
+          <div class="profile-dropdown-item mode-item">
+            <span class="profile-dropdown-label">Mode</span>
+            <button type="button" class="profile-dropdown-mode" id="themeToggle" aria-label="Toggle theme">
+              <span id="themeIconLight" class="theme-icon-svg" style="display:none;"><%- include('icons', { icon: 'sun' }) %></span>
+              <span id="themeIconDark" class="theme-icon-svg"><%- include('icons', { icon: 'moon' }) %></span>
+              <span id="themeLabel">Light</span>
+            </button>
+          </div>
+          <a href="/profile" class="profile-dropdown-item profile-dropdown-link" role="menuitem">
+            <%- include('icons', { icon: 'profile' }) %>
+            <span>Profile</span>
+          </a>
+          <form method="post" action="/logout" class="profile-dropdown-item profile-dropdown-form">
+            <button type="submit" class="profile-dropdown-link profile-dropdown-logout" role="menuitem">
+              <span>Logout</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</header>

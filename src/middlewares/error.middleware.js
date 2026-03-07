@@ -26,8 +26,10 @@ function errorHandler(error, req, res, next) {
        }); 
     }
 
-    if (statusError === 422) {  
-      return res.redirect(req.get('Referrer') || '/');
+    if (statusError === 422) {
+      const referrer = req.get('Referrer') || '/';
+      const sep = referrer.includes('?') ? '&' : '?';
+      return res.redirect(referrer + sep + 'error=' + encodeURIComponent(message));
     }
 
     res.status(statusError).render('error/error', {

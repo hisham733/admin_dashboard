@@ -1,26 +1,26 @@
 const roleService = require('../services/role.service');
+const prisma = require('../configs/prisma');
 const { can } = require('../utilities');
 
 async function getRoles(req, res) {
   can(req.session.user, 'role:list');
 
   const query = req.query;
-  const roles = await roleService.getRoles(query);
+  const roles = await roleService.getRoles({ ...query, perPage: 100 });
+  const userCount = await prisma.user.count();
+  const permissionCount = await prisma.permission.count();
 
-  res.json(roles);
+  res.render('layouts/main', {
+    contentPartial: 'roles/index',
+    contentData: { roles, userCount, permissionCount },
+    activeSection: 'roles',
+    title: 'Role Management'
+  });
 }
 
 async function showRole(req, res) {
   can(req.session.user, 'role:view');
-
-  const id = Number(req.params.id);
-  const role = await roleService.getRole(id);
-
-  if (!role) {
-    return res.status(404).json({ error: 'Role not found' });
-  }
-
-  res.json(role);
+  return res.redirect(`/role/${req.params.id}/edit`);
 }
 
 async function createRole(req, res) {
@@ -28,7 +28,12 @@ async function createRole(req, res) {
 
   const permissions = await roleService.getAllPermissions();
 
-  res.json({ permissions });
+  res.render('layouts/main', {
+    contentPartial: 'roles/create',
+    contentData: { permissions },
+    activeSection: 'roles',
+    title: 'Add New Role'
+  });
 }
 
 async function storeRole(req, res) {
@@ -36,9 +41,40 @@ async function storeRole(req, res) {
 
   const { name, permissionIds } = req.body;
 
-  const role = await roleService.storeRole(name, permissionIds || []);
+  const ids = Array.isArray(permissionIds) ? permissionIds : (permissionIds ? [permissionIds] : []);
 
-  res.status(201).json(role);
+  try {
+    const role = await roleService.storeRole(name, ids);
+    res.redirect(`/role`);
+  } catch (err) {
+    const permissions = await roleService.getAllPermissions();
+    res.render('layouts/main', {
+      contentPartial: 'roles/create',
+      contentData: { permissions, error: err.message },
+      activeSection: 'roles',
+      title: 'Add New Role'
+    });
+  }
+}
+
+async function editRole(req, res) {
+  can(req.session.user, 'role:update');
+
+  const id = Number(req.params.id);
+  const role = await roleService.getRole(id);
+
+  if (!role) {
+    return res.redirect('/role');
+  }
+
+  const permissions = await roleService.getAllPermissions();
+
+  res.render('layouts/main', {
+    contentPartial: 'roles/edit',
+    contentData: { role, permissions },
+    activeSection: 'roles',
+    title: `Edit: ${role.name}`
+  });
 }
 
 async function updateRole(req, res) {
@@ -47,9 +83,21 @@ async function updateRole(req, res) {
   const id = Number(req.params.id);
   const { name, permissionIds } = req.body;
 
-  const role = await roleService.updateRole(id, name, permissionIds);
+  const ids = Array.isArray(permissionIds) ? permissionIds : (permissionIds ? [permissionIds] : []);
 
-  res.json(role);
+  try {
+    await roleService.updateRole(id, name, ids);
+    res.redirect('/role');
+  } catch (err) {
+    const role = await roleService.getRole(id);
+    const permissions = await roleService.getAllPermissions();
+    res.render('layouts/main', {
+      contentPartial: 'roles/edit',
+      contentData: { role, permissions, error: err.message },
+      activeSection: 'roles',
+      title: `Edit: ${role.name}`
+    });
+  }
 }
 
 async function deleteRole(req, res) {
@@ -57,9 +105,20 @@ async function deleteRole(req, res) {
 
   const id = Number(req.params.id);
 
-  await roleService.deleteRole(id);
-
-  res.status(204).send();
+  try {
+    await roleService.deleteRole(id);
+    res.redirect('/role');
+  } catch (err) {
+    const roles = await roleService.getRoles({ perPage: 100 });
+    const userCount = await prisma.user.count();
+    const permissionCount = await prisma.permission.count();
+    res.render('layouts/main', {
+      contentPartial: 'roles/index',
+      contentData: { roles, userCount, permissionCount, error: err.message },
+      activeSection: 'roles',
+      title: 'Role Management'
+    });
+  }
 }
 
 module.exports = {
@@ -67,6 +126,7 @@ module.exports = {
   showRole,
   createRole,
   storeRole,
+  editRole,
   updateRole,
   deleteRole
 };

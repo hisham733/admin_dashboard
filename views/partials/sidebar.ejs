@@ -1,0 +1,48 @@
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <% if (typeof ui !== 'undefined' && ui.logo) { %>
+      <div class="sidebar-logo"><img src="<%= ui.logo %>" alt="Logo"></div>
+    <% } else { %>
+      <div class="sidebar-logo"><%- include('icons', { icon: 'logo' }) %></div>
+    <% } %>
+    <div class="sidebar-title"><%= typeof ui !== 'undefined' ? ui.systemName : 'Admin Console' %></div>
+    <div class="sidebar-subtitle">Enterprise Edition</div>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">Main Menu</div>
+    <a href="/dashboard" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'dashboard') ? 'active' : '' %>" title="Dashboard Overview">
+      <span class="sidebar-item-icon"><%- include('icons', { icon: 'dashboard' }) %></span>
+      <span class="sidebar-item-text">Dashboard Overview</span>
+    </a>
+    <a href="/user" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'users') ? 'active' : '' %>" title="User Management">
+      <span class="sidebar-item-icon"><%- include('icons', { icon: 'users' }) %></span>
+      <span class="sidebar-item-text">User Management</span>
+    </a>
+    <a href="/role" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'roles') ? 'active' : '' %>" title="Roles & Permissions">
+      <span class="sidebar-item-icon"><%- include('icons', { icon: 'roles' }) %></span>
+      <span class="sidebar-item-text">Roles & Permissions</span>
+    </a>
+    <a href="/form" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'forms') ? 'active' : '' %>" title="Forms Manager">
+      <span class="sidebar-item-icon"><%- include('icons', { icon: 'form' }) %></span>
+      <span class="sidebar-item-text">Forms Manager</span>
+    </a>
+    <a href="/settings" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'settings') ? 'active' : '' %>" title="System Settings">
+      <span class="sidebar-item-icon"><%- include('icons', { icon: 'settings' }) %></span>
+      <span class="sidebar-item-text">System Settings</span>
+    </a>
+  </nav>
+  
+  <div class="sidebar-footer">
+    <% if (typeof user !== 'undefined' && user) { %>
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar"><%= (user.name || '').charAt(0).toUpperCase() %></div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name"><%= user.name %></div>
+          <div class="sidebar-user-role"><%= (user.role && user.role.name) ? user.role.name.toUpperCase() : 'USER' %></div>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

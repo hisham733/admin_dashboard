@@ -1,0 +1,110 @@
+<div class="section-header">
+  <div>
+    <h1 class="page-title">User Management</h1>
+    <p class="page-subtitle">Manage and monitor platform members and their access levels.</p>
+  </div>
+  <a href="/user/create" class="btn btn-primary">+ Add New User</a>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-header">
+    <div class="search-input" style="max-width: 320px;">
+      <span class="search-input-icon">🔍</span>
+      <input type="text" placeholder="Search users by name, email, or role..." id="userSearch" oninput="filterUsers()">
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Role</th>
+          <th>Last Active</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <% if (typeof users !== 'undefined' && users && users.length) { %>
+          <% users.forEach(function(u) { %>
+            <tr data-search="<%= (u.name || '').toLowerCase() %> <%= (u.email || '').toLowerCase() %> <%= (u.role && u.role.name ? u.role.name : '').toLowerCase() %>">
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar"><%= (u.name || '?').charAt(0).toUpperCase() %></div>
+                  <div class="user-info">
+                    <div class="user-name"><%= u.name %></div>
+                    <div class="user-email"><%= u.email %></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-primary"><%= (u.role && u.role.name) ? u.role.name.toUpperCase() : '—' %></span>
+              </td>
+              <td>
+                <span class="badge badge-success">Active</span>
+              </td>
+              <td style="color: var(--text-muted); font-size: 13px;">
+                <%= u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—' %>
+              </td>
+              <td>
+                <div class="table-actions">
+                  <a href="/user/<%= u.id %>" class="btn btn-ghost btn-icon btn-sm" title="View">👁</a>
+                  <a href="/user/<%= u.id %>/edit" class="btn btn-ghost btn-icon btn-sm" title="Edit">✏️</a>
+                  <form action="/user/<%= u.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this user?');">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Delete">🗑️</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <div class="empty-state-icon">👥</div>
+                <div class="empty-state-title">No users yet</div>
+                <div class="empty-state-text">Add your first user to get started.</div>
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <span class="pagination-info">Showing 1-<%= typeof users !== 'undefined' && users ? Math.min(users.length, 10) : 0 %> of <%= typeof users !== 'undefined' && users ? users.length : 0 %> users</span>
+    <div class="pagination-controls">
+      <button class="pagination-btn" disabled>‹</button>
+      <button class="pagination-btn active">1</button>
+      <button class="pagination-btn">›</button>
+    </div>
+  </div>
+</div>
+
+<div class="stat-cards">
+  <div class="stat-card">
+    <div class="stat-card-label">Total Registered</div>
+    <div class="stat-card-value"><%= typeof users !== 'undefined' && users ? users.length : 0 %></div>
+    <div class="stat-card-sub">Platform members</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Active Now</div>
+    <div class="stat-card-value"><%= typeof users !== 'undefined' && users ? users.length : 0 %></div>
+    <div class="stat-card-sub">Currently active</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Admin Roles</div>
+    <div class="stat-card-value"><%= typeof roleCount !== 'undefined' ? roleCount : 0 %></div>
+    <div class="stat-card-sub">Role types</div>
+  </div>
+</div>
+
+<script>
+function filterUsers() {
+  var q = document.getElementById('userSearch').value.toLowerCase();
+  var rows = document.querySelectorAll('#userTableBody tr[data-search]');
+  rows.forEach(function(r) {
+    r.style.display = !q || (r.dataset.search || '').indexOf(q) !== -1 ? '' : 'none';
+  });
+}
+</script>

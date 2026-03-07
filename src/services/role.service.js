@@ -6,14 +6,19 @@ async function getRoles(query) {
 
   const { page, perPage, search, orderBy } = normalizeQuery({ query });
 
-  return buildQuery({
-    prisma,
-    model: "role",
-    page,
-    perPage,
+  const where = search
+    ? { name: { contains: search } }
+    : {};
+
+  return prisma.role.findMany({
+    where,
+    skip: perPage * (page - 1),
+    take: perPage,
     orderBy: Object.keys(orderBy).length ? orderBy : { id: 'desc' },
-    keyword: search,
-    columns: ["name"]
+    include: {
+      permissions: true,
+      _count: { select: { users: true } }
+    }
   });
 
 }

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(){
+      var def='<%= typeof ui !== "undefined" && ui.theme ? ui.theme : "light" %>';
+      var t=localStorage.getItem('theme')||def;
+      if(t==='system')t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Admin Console' %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <% if (typeof ui !== 'undefined' && ui.primaryColor) { %>
+  <style>:root,[data-theme="light"],[data-theme="dark"]{--accent:<%= ui.primaryColor %>;--accent-hover:<%= ui.primaryColor %>dd;}</style>
+  <% } %>
+</head>
+<body class="auth-page">
+  <div class="auth-page-inner">
+    <% if (typeof contentPartial !== 'undefined') { %>
+      <%- include('../' + contentPartial, typeof contentData !== 'undefined' ? contentData : {}) %>
+    <% } else if (typeof body !== 'undefined') { %>
+      <%- body %>
+    <% } %>
+  </div>
+</body>
+</html>

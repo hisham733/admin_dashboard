@@ -1,0 +1,58 @@
+<div class="section-header">
+  <div>
+    <a href="/user" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Users</a>
+    <h1 class="page-title"><%= user.name %></h1>
+    <p class="page-subtitle"><%= user.email %></p>
+  </div>
+  <div class="page-actions">
+    <a href="/user/<%= user.id %>/edit" class="btn btn-primary">Edit User</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="user-cell" style="margin-bottom: 24px;">
+      <div class="user-avatar" style="width: 64px; height: 64px; font-size: 24px;"><%= (user.name || '?').charAt(0).toUpperCase() %></div>
+      <div class="user-info">
+        <div class="user-name" style="font-size: 20px;"><%= user.name %></div>
+        <div class="user-email" style="font-size: 16px;"><%= user.email %></div>
+        <span class="badge badge-primary" style="margin-top: 8px;"><%= (user.role && user.role.name) ? user.role.name.toUpperCase() : 'No Role' %></span>
+      </div>
+    </div>
+    
+    <form action="/user/<%= user.id %>" method="POST" style="max-width: 480px;">
+      <input type="hidden" name="_method" value="PATCH">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <input type="text" name="name" class="form-input" value="<%= user.name %>" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" class="form-input" value="<%= user.email %>" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select name="roleId" class="form-input form-select">
+          <option value="">No role</option>
+          <% if (typeof roles !== 'undefined' && roles && roles.length) { %>
+            <% roles.forEach(function(r) { %>
+              <option value="<%= r.id %>" <%= (user.role && user.role.id === r.id) ? 'selected' : '' %>><%= r.name %></option>
+            <% }); %>
+          <% } %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password (leave blank to keep)</label>
+        <input type="password" name="password" class="form-input" placeholder="••••••••">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" name="confirmPassword" class="form-input" placeholder="••••••••">
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/user" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>

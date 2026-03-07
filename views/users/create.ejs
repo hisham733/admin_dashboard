@@ -1,0 +1,61 @@
+<div class="section-header">
+  <div>
+    <a href="/user" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Users</a>
+    <h1 class="page-title">Add New User</h1>
+    <p class="page-subtitle">Create a new platform member with role and permissions.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div class="alert error show" style="background: var(--error-muted); border: 1px solid var(--error); color: var(--error); padding: 12px; border-radius: var(--radius-md); margin-bottom: 20px;"><%= error %></div>
+    <% } %>
+    
+    <form action="/user" method="POST" style="max-width: 480px;">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" name="name" class="form-input" placeholder="e.g. John Doe" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" name="email" class="form-input" placeholder="name@company.com" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select name="roleId" class="form-input form-select">
+          <option value="">Select a role</option>
+          <% if (typeof roles !== 'undefined' && roles && roles.length) { %>
+            <% roles.forEach(function(r) { %>
+              <option value="<%= r.id %>"><%= r.name %></option>
+            <% }); %>
+          <% } %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" name="password" class="form-input" placeholder="At least 8 characters" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" name="confirmPassword" class="form-input" placeholder="Repeat your password" required>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="submit" class="btn btn-primary">Create User</button>
+        <a href="/user" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>

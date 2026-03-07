@@ -7,7 +7,12 @@ async function show(req, res) {
 
     const orders = await dashboardService.getAllOrders();
 
-    return res.render('dashboard/index', { orders });
+    return res.render('layouts/main', {
+      contentPartial: 'dashboard/index',
+      contentData: { orders },
+      activeSection: 'dashboard',
+      title: 'Dashboard'
+    });
 }
 
 module.exports = {

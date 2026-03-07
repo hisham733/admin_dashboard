@@ -1,0 +1,64 @@
+<div class="section-header">
+  <div>
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-subtitle">Manage your account information and security.</p>
+  </div>
+</div>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert-inline alert-error"><%= error %></div>
+<% } %>
+
+<div class="card">
+  <div class="card-body">
+    <div class="user-cell" style="margin-bottom: 32px;">
+      <div class="user-avatar" style="width: 64px; height: 64px; font-size: 24px;"><%= (profile.name || '?').charAt(0).toUpperCase() %></div>
+      <div class="user-info">
+        <div class="user-name" style="font-size: 20px;"><%= profile.name %></div>
+        <div class="user-email" style="font-size: 15px;"><%= profile.email %></div>
+        <% if (profile.createdAt) { %>
+          <span class="text-muted" style="font-size: 13px;">Member since <%= new Date(profile.createdAt).toLocaleDateString() %></span>
+        <% } %>
+      </div>
+    </div>
+
+    <form action="/profile" method="POST" style="max-width: 480px;">
+      <div class="form-group">
+        <label class="form-label">Name</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" name="name" class="form-input" value="<%= profile.name %>" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input type="email" name="email" class="form-input" value="<%= profile.email %>" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Current Password (required only when changing password)</label>
+        <div class="input-wrap">
+          <input type="password" name="currentPassword" class="form-input" placeholder="••••••••" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password (leave blank to keep current)</label>
+        <div class="input-wrap">
+          <input type="password" name="newPassword" class="form-input" placeholder="••••••••" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <div class="input-wrap">
+          <input type="password" name="confirmPassword" class="form-input" placeholder="••••••••" autocomplete="new-password">
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
