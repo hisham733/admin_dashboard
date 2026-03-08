@@ -13,4 +13,4 @@ ENV APP_PORT=${APP_PORT}
 
 EXPOSE ${APP_PORT}
 
-CMD ["npm", "run", "start-seed"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start-seed"]
