@@ -1,4 +1,5 @@
 const winston = require('winston');
+const appConfig = require('../configs/app.config');
 const path = require('path');
 
 const { combine, timestamp, errors, json } = winston.format;
@@ -22,7 +23,7 @@ const logger = winston.createLogger({
 });
 
 
-if (process.env.NODE_ENV !== 'production') {
+if (appConfig.ENV !== 'production') {
   logger.add(new winston.transports.Console({
     format: combine(timestamp(), json())
   }));

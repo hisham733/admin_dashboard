@@ -4,16 +4,43 @@ const app = express();
 const session = require('express-session'); 
 const path = require('path');
 const errorHandler = require('./middlewares/error.middleware');
-const appConfig = require('./configs/app.config');
 const loadSettings = require('./middlewares/settings.middleware');
+const client = require('prom-client');
+
+const register = new client.Registry();
+
+register.setDefaultLabels({
+  app: 'Dashboard-Form-Management-system'
+});
+
+client.collectDefaultMetrics({ register });
+
+const httpRequestDurationMicroseconds = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests',
+  labelNames: ['method', 'route', 'code'],
+});
+
+register.registerMetric(httpRequestDurationMicroseconds);
+
+app.use((req, res, next) => {
+  const end = httpRequestDurationMicroseconds.startTimer();
+  res.on('finish', () => {
+    end({ method: req.method, route: req.path, code: res.statusCode });
+  });
+  next();
+});
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
 
-// Load settings from DB and make available to views
 app.use(loadSettings);
 
-// Session must run before any middleware that reads req.session
 app.use(session({
   secret: "super-secret-key",
   resave: false,
@@ -24,7 +51,6 @@ app.use(session({
   },
 }));
 
-// Make user and path available to all views
 app.use((req, res, next) => {
   res.locals.user = req.session?.user || null;
   res.locals.currentPath = req.path;

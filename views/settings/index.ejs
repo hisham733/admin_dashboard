@@ -16,44 +16,54 @@
     <div class="card-title">Appearance & Branding</div>
   </div>
   <div class="card-body">
+    <%
+      /* Merge saved settings with appConfig fallbacks via the always-available `ui` local */
+      var _s = typeof settings !== 'undefined' ? settings : {};
+      var _ui = typeof ui !== 'undefined' ? ui : {};
+      var _orgName    = _s.organization_name  || _ui.organizationName || '';
+      var _sysName    = _s.system_name        || _ui.systemName       || 'Admin Console';
+      var _logoUrl    = _s.logo_url           || _ui.logo             || '';
+      var _color      = _s.primary_color      || _ui.primaryColor     || '#2563eb';
+      var _theme      = _s.default_theme      || _ui.theme            || 'light';
+    %>
     <form action="/settings" method="POST">
       <div style="display: grid; gap: 24px; max-width: 560px;">
         <div class="form-group">
           <label class="form-label">Organization Name</label>
-          <input type="text" name="organization_name" class="form-input" 
-            value="<%= settings.organization_name || '' %>" 
+          <input type="text" name="organization_name" class="form-input"
+            value="<%= _orgName %>"
             placeholder="e.g. Acme Corp">
         </div>
         <div class="form-group">
           <label class="form-label">System Name (shown in header/sidebar)</label>
-          <input type="text" name="system_name" class="form-input" 
-            value="<%= settings.system_name || '' %>" 
+          <input type="text" name="system_name" class="form-input"
+            value="<%= _sysName %>"
             placeholder="e.g. Admin Console" required>
         </div>
         <div class="form-group">
           <label class="form-label">Logo URL</label>
-          <input type="url" name="logo_url" class="form-input" 
-            value="<%= settings.logo_url || '' %>" 
+          <input type="url" name="logo_url" class="form-input"
+            value="<%= _logoUrl %>"
             placeholder="https://example.com/logo.png">
-          <small style="font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block;">Leave empty to use default icon</small>
+          <small style="font-size: 12px; color: var(--text-muted); margin-top: 4px; display: block;">Leave empty to use the default icon</small>
         </div>
         <div class="form-group">
           <label class="form-label">Primary Color (hex)</label>
           <div style="display: flex; gap: 12px; align-items: center;">
-            <input type="color" name="primary_color_visual" id="primaryColorPicker" 
-              value="<%= settings.primary_color || '#2563eb' %>"
+            <input type="color" name="primary_color_visual" id="primaryColorPicker"
+              value="<%= _color %>"
               style="width: 48px; height: 48px; padding: 2px; border: 1px solid var(--border-default); border-radius: var(--radius-md); cursor: pointer;">
-            <input type="text" name="primary_color" id="primaryColorInput" class="form-input" 
-              value="<%= settings.primary_color || '#2563eb' %>" 
+            <input type="text" name="primary_color" id="primaryColorInput" class="form-input"
+              value="<%= _color %>"
               placeholder="#2563eb" style="flex: 1;">
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Default Theme (for new sessions)</label>
           <select name="default_theme" class="form-input form-select" style="max-width: 200px;">
-            <option value="light" <%= (settings.default_theme || 'light') === 'light' ? 'selected' : '' %>>Light</option>
-            <option value="dark" <%= settings.default_theme === 'dark' ? 'selected' : '' %>>Dark</option>
-            <option value="system" <%= settings.default_theme === 'system' ? 'selected' : '' %>>System</option>
+            <option value="light"  <%= _theme === 'light'  ? 'selected' : '' %>>Light</option>
+            <option value="dark"   <%= _theme === 'dark'   ? 'selected' : '' %>>Dark</option>
+            <option value="system" <%= _theme === 'system' ? 'selected' : '' %>>System</option>
           </select>
         </div>
         <div style="display: flex; gap: 12px; margin-top: 8px;">
