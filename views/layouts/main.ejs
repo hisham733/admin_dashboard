@@ -28,16 +28,31 @@
   <% if (typeof toastSuccess !== 'undefined' && toastSuccess) { %>
   <div class="toast toast-success" id="toastSuccess" role="alert"><%= toastSuccess %></div>
   <% } %>
+
+  <!-- Global confirmation modal -->
+  <div id="confirmModal" class="confirm-modal-backdrop" role="dialog" aria-modal="true" style="display:none;">
+    <div class="confirm-modal">
+      <div class="confirm-modal-icon" id="confirmModalIcon"></div>
+      <h3 class="confirm-modal-title" id="confirmModalTitle">Are you sure?</h3>
+      <p class="confirm-modal-message" id="confirmModalMessage"></p>
+      <div class="confirm-modal-actions">
+        <button type="button" class="btn btn-ghost" id="confirmModalCancel">Cancel</button>
+        <button type="button" class="btn" id="confirmModalOk">Confirm</button>
+      </div>
+    </div>
+  </div>
   <div class="app-layout">
     <%- include('../partials/sidebar') %>
     <div class="main-wrapper" id="mainWrapper">
       <%- include('../partials/header') %>
       <main class="main-content">
+        <div class="content-wrap">
         <% if (typeof contentPartial !== 'undefined') { %>
           <%- include('../' + contentPartial, typeof contentData !== 'undefined' ? contentData : {}) %>
         <% } else if (typeof body !== 'undefined') { %>
           <%- body %>
         <% } %>
+        </div>
       </main>
     </div>
   </div>
@@ -115,24 +130,111 @@
           overlay.classList.remove('open');
         });
       }
+      /* ── Password show/hide ── */
       (function(){
-        var t=document.getElementById('toastError')||document.getElementById('toastSuccess');
-        if(t){
+        var eyeShow='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        var eyeHide='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        document.querySelectorAll('input[type="password"]').forEach(function(input){
+          var wrap = input.closest('.input-wrap') || input.parentElement;
+          if(wrap.querySelector('.pwd-toggle')) return; // already added
+          if(getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+          input.classList.add('has-toggle');
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'pwd-toggle';
+          btn.setAttribute('aria-label', 'Toggle password visibility');
+          btn.innerHTML = eyeShow;
+          btn.addEventListener('click', function(){
+            var shown = input.type === 'text';
+            input.type = shown ? 'password' : 'text';
+            btn.innerHTML = shown ? eyeShow : eyeHide;
+          });
+          wrap.appendChild(btn);
+        });
+      })();
+
+      /* ── Toasts ── */
+      (function(){
+        function dismissToast(el, delay) {
           setTimeout(function(){
-            t.style.opacity='0';
-            t.style.transform='translateY(-12px)';
-            t.style.transition='opacity 0.25s, transform 0.25s';
-            setTimeout(function(){
-              if(window.history.replaceState&&window.location.search){
-                var u=new URL(window.location.href);
-                u.searchParams.delete('error');
-                u.searchParams.delete('success');
-                window.history.replaceState({},'',u.toString());
-              }
-              t.remove();
-            },280);
-          },4500);
+            el.style.opacity='0';
+            el.style.transform='translateY(-12px)';
+            el.style.transition='opacity 0.3s ease, transform 0.3s ease';
+            setTimeout(function(){ el.remove(); }, 320);
+          }, delay);
         }
+        var toasts=[document.getElementById('toastError'),document.getElementById('toastSuccess')].filter(Boolean);
+        toasts.forEach(function(t){ dismissToast(t, 4500); });
+        if(toasts.length && window.history.replaceState && window.location.search){
+          setTimeout(function(){
+            var u=new URL(window.location.href);
+            u.searchParams.delete('error');
+            u.searchParams.delete('success');
+            window.history.replaceState({},'',u.toString());
+          }, 4800);
+        }
+      })();
+
+      /* ── Confirmation modal ── */
+      (function(){
+        var modal   = document.getElementById('confirmModal');
+        var titleEl = document.getElementById('confirmModalTitle');
+        var msgEl   = document.getElementById('confirmModalMessage');
+        var iconEl  = document.getElementById('confirmModalIcon');
+        var okBtn   = document.getElementById('confirmModalOk');
+        var cancelBtn = document.getElementById('confirmModalCancel');
+        var _pendingForm = null;
+        var _pendingCb   = null;
+
+        function openModal(opts) {
+          titleEl.textContent = opts.title   || 'Are you sure?';
+          msgEl.textContent   = opts.message || '';
+          iconEl.textContent  = opts.icon    || '⚠️';
+          okBtn.textContent   = opts.okLabel || 'Confirm';
+          okBtn.className     = 'btn ' + (opts.okClass || 'btn-primary');
+          modal.style.display = 'flex';
+          cancelBtn.focus();
+        }
+        function closeModal() {
+          modal.style.display = 'none';
+          _pendingForm = null;
+          _pendingCb   = null;
+        }
+
+        if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+
+        if(okBtn) okBtn.addEventListener('click', function(){
+          var form = _pendingForm;
+          var cb   = _pendingCb;
+          closeModal();
+          if(cb)   cb();
+          else if(form) form.submit();
+        });
+
+        /* Intercept forms with data-confirm attribute */
+        document.addEventListener('submit', function(e){
+          var form = e.target;
+          var msg  = form.getAttribute('data-confirm');
+          if(!msg) return;
+          e.preventDefault();
+          _pendingForm = form;
+          var danger = form.getAttribute('data-confirm-danger') !== null;
+          openModal({
+            title:   form.getAttribute('data-confirm-title')   || (danger ? 'Delete?' : 'Confirm action'),
+            message: msg,
+            icon:    danger ? '🗑️' : '⚠️',
+            okLabel: form.getAttribute('data-confirm-ok')      || (danger ? 'Delete' : 'Confirm'),
+            okClass: danger ? 'btn-danger' : 'btn-primary'
+          });
+        });
+
+        /* Expose global function for inline JS usage (e.g. create.ejs clearAll) */
+        window.showConfirm = function(opts, callback) {
+          _pendingCb = callback;
+          openModal(opts);
+        };
       })();
     })();
   </script>

@@ -5,14 +5,13 @@ const { can } = require('../utilities');
 async function getRoles(req, res) {
   can(req.session.user, 'role:list');
 
-  const query = req.query;
-  const roles = await roleService.getRoles({ ...query, perPage: 100 });
-  const userCount = await prisma.user.count();
+  const { items: roles, total, page, perPage } = await roleService.getRoles(req.query, true);
+  const userCount = await prisma.user.count({ where: { NOT: { role: { name: 'super admin' } } } });
   const permissionCount = await prisma.permission.count();
 
   res.render('layouts/main', {
     contentPartial: 'roles/index',
-    contentData: { roles, userCount, permissionCount },
+    contentData: { roles, total, page, perPage, userCount, permissionCount, query: req.query },
     activeSection: 'roles',
     title: 'Role Management'
   });
@@ -45,7 +44,7 @@ async function storeRole(req, res) {
 
   try {
     const role = await roleService.storeRole(name, ids);
-    res.redirect(`/role`);
+    res.redirect(`/role?success=${encodeURIComponent('Role created successfully')}`);
   } catch (err) {
     const permissions = await roleService.getAllPermissions();
     res.render('layouts/main', {
@@ -87,7 +86,7 @@ async function updateRole(req, res) {
 
   try {
     await roleService.updateRole(id, name, ids);
-    res.redirect('/role');
+    res.redirect('/role?success=' + encodeURIComponent('Role updated successfully'));
   } catch (err) {
     const role = await roleService.getRole(id);
     const permissions = await roleService.getAllPermissions();
@@ -107,17 +106,9 @@ async function deleteRole(req, res) {
 
   try {
     await roleService.deleteRole(id);
-    res.redirect('/role');
+    res.redirect('/role?success=' + encodeURIComponent('Role deleted successfully'));
   } catch (err) {
-    const roles = await roleService.getRoles({ perPage: 100 });
-    const userCount = await prisma.user.count();
-    const permissionCount = await prisma.permission.count();
-    res.render('layouts/main', {
-      contentPartial: 'roles/index',
-      contentData: { roles, userCount, permissionCount, error: err.message },
-      activeSection: 'roles',
-      title: 'Role Management'
-    });
+    res.redirect('/role?error=' + encodeURIComponent(err.message));
   }
 }
 

@@ -34,6 +34,8 @@ model User {
   role     Role?  @relation(fields: [roleId], references: [id])
   roleId   Int?   
 
+  forms     FormTemplate[]
+
   createdAt DateTime @default(now())
 
   @@map("users")
@@ -46,6 +48,20 @@ model SystemSetting {
   updatedAt DateTime @updatedAt
 
   @@map("system_settings")
+}
+
+model FormTemplate {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(200)
+  fields      Json?
+  isActive    Boolean  @default(false)
+  createdBy   User?    @relation(fields: [createdById], references: [id])
+  createdById Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("form_templates")
 }
 
 model Order {

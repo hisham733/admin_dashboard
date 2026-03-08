@@ -1,0 +1,49 @@
+<div class="section-header">
+  <div>
+    <a href="/form" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Forms</a>
+    <h1 class="page-title"><%= form.name %></h1>
+    <p class="page-subtitle">Form template details</p>
+  </div>
+  <a href="/form/<%= form.id %>/edit" class="btn btn-primary">Edit Template</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="form-group">
+      <label class="form-label">Template Name</label>
+      <p style="font-size: 16px; font-weight: 600; color: var(--text-primary);"><%= form.name %></p>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fields</label>
+      <% var fieldList = Array.isArray(form.fields) ? form.fields : []; %>
+      <% if (fieldList.length) { %>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Field Name</th>
+                <th>Type</th>
+                <th>Required</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% fieldList.forEach(function(f) { %>
+                <tr>
+                  <td><strong><%= f.name %></strong></td>
+                  <td><span class="badge badge-muted"><%= f.type || 'string' %></span></td>
+                  <td><%= f.is_required !== false ? 'Yes' : 'No' %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="text-muted">No fields defined.</p>
+      <% } %>
+    </div>
+    <p class="text-muted" style="font-size: 13px; margin-top: 16px;">
+      Created <%= form.createdAt ? new Date(form.createdAt).toLocaleString() : '' %>
+      <% if (form.updatedAt) { %> · Updated <%= new Date(form.updatedAt).toLocaleString() %><% } %>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,67 @@
+<%
+  /*
+   * Expects in scope: page, perPage, total, query (req.query object), baseUrl (e.g. '/user')
+   * Renders: per-page selector, page numbers, prev/next
+   */
+  var _page     = typeof page     !== 'undefined' ? Number(page)     : 1;
+  var _perPage  = typeof perPage  !== 'undefined' ? Number(perPage)  : 10;
+  var _total    = typeof total    !== 'undefined' ? Number(total)    : 0;
+  var _base     = typeof baseUrl  !== 'undefined' ? baseUrl          : '';
+  var _q        = typeof query    !== 'undefined' ? query            : {};
+  var _totalPages = Math.max(1, Math.ceil(_total / _perPage));
+  var _start      = Math.min(_total, (_page - 1) * _perPage + 1);
+  var _end        = Math.min(_total, _page * _perPage);
+
+  function _qs(overrides) {
+    var p = Object.assign({}, _q, overrides);
+    return Object.keys(p)
+      .filter(function(k){ return p[k] !== null && p[k] !== undefined && p[k] !== ''; })
+      .map(function(k){ return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]); })
+      .join('&');
+  }
+%>
+<% if (_total > 0) { %>
+<div class="pagination">
+  <div style="display:flex; align-items:center; gap: 8px;">
+    <span class="pagination-info">
+      Showing <%= _start %>–<%= _end %> of <%= _total %>
+    </span>
+    <select class="form-input" style="width:auto; padding:4px 8px; font-size:13px;"
+      onchange="window.location=('<%= _base %>?' + '<%= _qs({page:1}) %>'.replace(/perPage=\d+/, 'perPage='+this.value) || ('<%= _base %>?perPage='+this.value))">
+      <% [10,25,50,100].forEach(function(n){ %>
+        <option value="<%= n %>" <%= n === _perPage ? 'selected' : '' %>><%= n %> / page</option>
+      <% }); %>
+    </select>
+  </div>
+  <div class="pagination-controls">
+    <% if (_page > 1) { %>
+      <a href="<%= _base %>?<%= _qs({page: _page - 1}) %>" class="pagination-btn">‹</a>
+    <% } else { %>
+      <button class="pagination-btn" disabled>‹</button>
+    <% } %>
+
+    <%
+      var _start_p = Math.max(1, _page - 2);
+      var _end_p   = Math.min(_totalPages, _page + 2);
+    %>
+    <% if (_start_p > 1) { %>
+      <a href="<%= _base %>?<%= _qs({page:1}) %>" class="pagination-btn">1</a>
+      <% if (_start_p > 2) { %><span class="pagination-btn" style="cursor:default;">…</span><% } %>
+    <% } %>
+    <% for (var _pn = _start_p; _pn <= _end_p; _pn++) { %>
+      <a href="<%= _base %>?<%= _qs({page:_pn}) %>"
+         class="pagination-btn <%= _pn === _page ? 'active' : '' %>"><%= _pn %></a>
+    <% } %>
+    <% if (_end_p < _totalPages) { %>
+      <% if (_end_p < _totalPages - 1) { %><span class="pagination-btn" style="cursor:default;">…</span><% } %>
+      <a href="<%= _base %>?<%= _qs({page:_totalPages}) %>" class="pagination-btn"><%= _totalPages %></a>
+    <% } %>
+
+    <% if (_page < _totalPages) { %>
+      <a href="<%= _base %>?<%= _qs({page: _page + 1}) %>" class="pagination-btn">›</a>
+    <% } else { %>
+      <button class="pagination-btn" disabled>›</button>
+    <% } %>
+  </div>
+</div>
+<% } %>

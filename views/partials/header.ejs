@@ -14,12 +14,28 @@
     </div>
   </div>
   
+  <%
+    var _hPerms = (typeof user !== 'undefined' && user && user.permissions) ? user.permissions : [];
+    var _hIsSA  = typeof user !== 'undefined' && user && user.role && user.role.name === 'super admin';
+    var _hCan   = function(p) { return _hIsSA || _hPerms.includes(p); };
+    var _hAct   = function(s) { return (typeof activeSection !== 'undefined' && activeSection === s) ? 'active' : ''; };
+  %>
   <nav class="header-nav">
-    <a href="/dashboard" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'dashboard') ? 'active' : '' %>">Dashboard</a>
-    <a href="/user" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'users') ? 'active' : '' %>">Users</a>
-    <a href="/role" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'roles') ? 'active' : '' %>">Roles</a>
-    <a href="/form" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'forms') ? 'active' : '' %>">Forms</a>
-    <a href="/settings" class="header-nav-link <%= (typeof activeSection !== 'undefined' && activeSection === 'settings') ? 'active' : '' %>">Settings</a>
+    <% if (_hCan('dashboard:view')) { %>
+    <a href="/dashboard" class="header-nav-link <%= _hAct('dashboard') %>">Dashboard</a>
+    <% } %>
+    <% if (_hCan('user:list')) { %>
+    <a href="/user" class="header-nav-link <%= _hAct('users') %>">Users</a>
+    <% } %>
+    <% if (_hCan('role:list')) { %>
+    <a href="/role" class="header-nav-link <%= _hAct('roles') %>">Roles</a>
+    <% } %>
+    <% if (_hCan('form:list')) { %>
+    <a href="/form" class="header-nav-link <%= _hAct('forms') %>">Forms</a>
+    <% } %>
+    <% if (_hCan('settings:view')) { %>
+    <a href="/settings" class="header-nav-link <%= _hAct('settings') %>">Settings</a>
+    <% } %>
   </nav>
   
   <div class="header-right">

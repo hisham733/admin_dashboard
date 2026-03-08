@@ -9,28 +9,49 @@
     <div class="sidebar-subtitle">Enterprise Edition</div>
   </div>
   
+  <%
+    var _sidePerms  = (typeof user !== 'undefined' && user && user.permissions) ? user.permissions : [];
+    var _sideIsSA   = typeof user !== 'undefined' && user && user.role && user.role.name === 'super admin';
+    var _hasPerm    = function(p) { return _sideIsSA || _sidePerms.includes(p); };
+    var _active     = function(s) { return (typeof activeSection !== 'undefined' && activeSection === s) ? 'active' : ''; };
+  %>
   <nav class="sidebar-nav">
     <div class="sidebar-section">Main Menu</div>
-    <a href="/dashboard" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'dashboard') ? 'active' : '' %>" title="Dashboard Overview">
+
+    <% if (_hasPerm('dashboard:view')) { %>
+    <a href="/dashboard" class="sidebar-item <%= _active('dashboard') %>" title="Dashboard Overview">
       <span class="sidebar-item-icon"><%- include('icons', { icon: 'dashboard' }) %></span>
       <span class="sidebar-item-text">Dashboard Overview</span>
     </a>
-    <a href="/user" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'users') ? 'active' : '' %>" title="User Management">
+    <% } %>
+
+    <% if (_hasPerm('user:list')) { %>
+    <a href="/user" class="sidebar-item <%= _active('users') %>" title="User Management">
       <span class="sidebar-item-icon"><%- include('icons', { icon: 'users' }) %></span>
       <span class="sidebar-item-text">User Management</span>
     </a>
-    <a href="/role" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'roles') ? 'active' : '' %>" title="Roles & Permissions">
+    <% } %>
+
+    <% if (_hasPerm('role:list')) { %>
+    <a href="/role" class="sidebar-item <%= _active('roles') %>" title="Roles & Permissions">
       <span class="sidebar-item-icon"><%- include('icons', { icon: 'roles' }) %></span>
       <span class="sidebar-item-text">Roles & Permissions</span>
     </a>
-    <a href="/form" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'forms') ? 'active' : '' %>" title="Forms Manager">
+    <% } %>
+
+    <% if (_hasPerm('form:list')) { %>
+    <a href="/form" class="sidebar-item <%= _active('forms') %>" title="Forms Manager">
       <span class="sidebar-item-icon"><%- include('icons', { icon: 'form' }) %></span>
       <span class="sidebar-item-text">Forms Manager</span>
     </a>
-    <a href="/settings" class="sidebar-item <%= (typeof activeSection !== 'undefined' && activeSection === 'settings') ? 'active' : '' %>" title="System Settings">
+    <% } %>
+
+    <% if (_hasPerm('settings:view')) { %>
+    <a href="/settings" class="sidebar-item <%= _active('settings') %>" title="System Settings">
       <span class="sidebar-item-icon"><%- include('icons', { icon: 'settings' }) %></span>
       <span class="sidebar-item-text">System Settings</span>
     </a>
+    <% } %>
   </nav>
   
   <div class="sidebar-footer">

@@ -1,0 +1,130 @@
+        <%
+          var _q = typeof query !== 'undefined' ? query : {};
+          var _formPerms = (typeof user !== 'undefined' && user && user.permissions) ? user.permissions : [];
+          var _isSuperAdmin    = typeof user !== 'undefined' && user && user.role && user.role.name === 'super admin';
+          var _canCreateForm   = _isSuperAdmin || _formPerms.includes('form:create');
+          var _canViewForm     = _isSuperAdmin || _formPerms.includes('form:view');
+          var _canEditForm     = _isSuperAdmin || _formPerms.includes('form:update');
+          var _canDeleteForm   = _isSuperAdmin || _formPerms.includes('form:delete');
+          var _canActivateForm = _isSuperAdmin || (typeof canActivate !== 'undefined' ? canActivate : _formPerms.includes('form:activate'));
+          var _canManageAll    = _isSuperAdmin || (typeof canManageAll !== 'undefined' ? canManageAll : false);
+          var _sortField = (_q.sort) ? _q.sort.split(':')[0] : '';
+          var _sortDir   = (_q.sort) ? (_q.sort.split(':')[1] || 'asc') : 'asc';
+          function _sortUrl(field) {
+            var dir = (_sortField === field && _sortDir === 'asc') ? 'desc' : 'asc';
+            var nq = Object.assign({}, _q, { sort: field+':'+dir, page: 1 });
+            return '/form?' + Object.keys(nq).filter(function(k){ return nq[k]; }).map(function(k){ return k+'='+encodeURIComponent(nq[k]); }).join('&');
+          }
+          function _sortIcon(field) { return _sortField === field ? (_sortDir === 'asc' ? ' ↑' : ' ↓') : ''; }
+        %>
+<div class="section-header">
+  <div>
+    <h1 class="page-title">Forms Manager</h1>
+    <p class="page-subtitle"><% if (_canManageAll) { %>All form templates across the system.<% } else { %>Your personal form templates.<% } %></p>
+  </div>
+  <% if (_canCreateForm) { %>
+    <a href="/form/create" class="btn btn-primary">+ Create Form Template</a>
+  <% } %>
+</div>
+
+<div class="card">
+  <div class="card-header" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <form method="GET" action="/form" style="display:flex; gap:8px; align-items:center;">
+      <div class="search-input" style="max-width:300px;">
+        <span class="search-input-icon">🔍</span>
+        <input type="text" name="search" placeholder="Search templates…" value="<%= _q.search || '' %>">
+      </div>
+      <% if (_q.sort) { %><input type="hidden" name="sort" value="<%= _q.sort %>"><% } %>
+      <button type="submit" class="btn btn-ghost btn-sm">Search</button>
+      <% if (_q.search || _q.sort) { %><a href="/form" class="btn btn-ghost btn-sm">Clear</a><% } %>
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th><a href="<%= _sortUrl('name') %>" style="color:inherit;text-decoration:none;">Template Name<%= _sortIcon('name') %></a></th>
+          <th>Status</th>
+          <th>Fields</th>
+          <% if (_canManageAll) { %><th>Created By</th><% } %>
+          <th><a href="<%= _sortUrl('updatedAt') %>" style="color:inherit;text-decoration:none;">Updated<%= _sortIcon('updatedAt') %></a></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (typeof forms !== 'undefined' && forms && forms.length) { %>
+          <% forms.forEach(function(f) { %>
+            <% var fieldList = Array.isArray(f.fields) ? f.fields : []; %>
+            <tr>
+              <td><strong><%= f.name %></strong></td>
+              <td>
+                <% if (f.isActive) { %>
+                  <span class="badge badge-success">Active</span>
+                <% } else { %>
+                  <span class="badge badge-muted">Inactive</span>
+                <% } %>
+              </td>
+              <td><span class="badge badge-muted"><%= fieldList.length %> field<%= fieldList.length !== 1 ? 's' : '' %></span></td>
+              <% if (_canManageAll) { %>
+                <td style="font-size:13px; color: var(--text-muted);">
+                  <%= (f.createdBy && f.createdBy.name) ? f.createdBy.name : '—' %>
+                </td>
+              <% } %>
+              <td style="color: var(--text-muted); font-size: 13px;"><%= f.updatedAt ? new Date(f.updatedAt).toLocaleDateString() : '—' %></td>
+              <td>
+                <div class="table-actions">
+                  <% if (_canActivateForm && !f.isActive) { %>
+                    <form action="/form/<%= f.id %>/activate" method="POST" style="display:inline;"
+                      data-confirm="Set &quot;<%= f.name %>&quot; as the active form? The current active form will be deactivated."
+                      data-confirm-title="Activate Form"
+                      data-confirm-ok="Activate">
+                      <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Set as Active" style="color: var(--success);">✓</button>
+                    </form>
+                  <% } %>
+                  <% if (_canActivateForm && f.isActive) { %>
+                    <form action="/form/<%= f.id %>/deactivate" method="POST" style="display:inline;"
+                      data-confirm="Deactivate &quot;<%= f.name %>&quot;? No form will be active after this."
+                      data-confirm-title="Deactivate Form"
+                      data-confirm-ok="Deactivate">
+                      <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Deactivate" style="color: var(--warning, #f59e0b);">⏸</button>
+                    </form>
+                  <% } %>
+                  <% if (_canViewForm) { %>
+                    <a href="/form/<%= f.id %>" class="btn btn-ghost btn-icon btn-sm" title="View">👁</a>
+                  <% } %>
+                  <% if (_canEditForm) { %>
+                    <a href="/form/<%= f.id %>/edit" class="btn btn-ghost btn-icon btn-sm" title="Edit">✏️</a>
+                  <% } %>
+                  <% if (_canDeleteForm) { %>
+                    <form action="/form/<%= f.id %>" method="POST" style="display:inline;"
+                      data-confirm="Delete &quot;<%= f.name %>&quot;? This cannot be undone."
+                      data-confirm-title="Delete Form"
+                      data-confirm-ok="Delete"
+                      data-confirm-danger>
+                      <input type="hidden" name="_method" value="DELETE">
+                      <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Delete">🗑️</button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="<%= _canManageAll ? 6 : 5 %>">
+              <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <div class="empty-state-title">No form templates yet</div>
+                <div class="empty-state-text">Create your first form template to get started.</div>
+                <% if (_canCreateForm) { %>
+                  <a href="/form/create" class="btn btn-primary" style="margin-top: 16px;">+ Create Form Template</a>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+  <%- include('../partials/pagination', { page: page, perPage: perPage, total: total, query: query, baseUrl: '/form' }) %>
+</div>

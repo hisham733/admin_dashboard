@@ -2,24 +2,35 @@ const prisma = require('../configs/prisma');
 const { buildQuery, normalizeQuery } = require('../utilities');
 const VALIDATION_ERROR = require('../errors/validation.error');
 
-async function getRoles(query) {
+async function getRoles(query, excludeSuperAdmin = false) {
 
-  const { page, perPage, search, orderBy } = normalizeQuery({ query });
-
-  const where = search
-    ? { name: { contains: search } }
-    : {};
-
-  return prisma.role.findMany({
-    where,
-    skip: perPage * (page - 1),
-    take: perPage,
-    orderBy: Object.keys(orderBy).length ? orderBy : { id: 'desc' },
-    include: {
-      permissions: true,
-      _count: { select: { users: true } }
-    }
+  const { page, perPage, search, orderBy } = normalizeQuery({
+    query,
+    allowedSortFields: ['name', 'id']
   });
+
+  const where = {
+    ...(excludeSuperAdmin ? { NOT: { name: 'super admin' } } : {}),
+    ...(search ? { name: { contains: search } } : {})
+  };
+
+  const finalOrderBy = Object.keys(orderBy).length ? orderBy : { id: 'desc' };
+
+  const [items, total] = await Promise.all([
+    prisma.role.findMany({
+      where,
+      skip: perPage * (page - 1),
+      take: perPage,
+      orderBy: finalOrderBy,
+      include: {
+        permissions: true,
+        _count: { select: { users: true } }
+      }
+    }),
+    prisma.role.count({ where })
+  ]);
+
+  return { items, total, page, perPage };
 
 }
 

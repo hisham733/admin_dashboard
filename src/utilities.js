@@ -1,5 +1,5 @@
-const VALIDATION_ERROR = require('./errors/validation.error'); 
 const bcrypt = require('bcrypt');
+const HttpStatus = require('./enums/http.status.enum');
 
 
 /** 
@@ -9,15 +9,21 @@ const bcrypt = require('bcrypt');
  * 
  * function used to authorize the customer
  */
+function isSuperAdmin(user) {
+  return user?.role?.name === 'super admin';
+}
+
 function can(user, permission) {
+  if (isSuperAdmin(user)) return true;
 
   if (!user?.permissions?.includes(permission)) {
-    throw new VALIDATION_ERROR("Unauthorized user");
+    const err = new Error(HttpStatus.getMessage(HttpStatus.FORBIDDEN));
+    err.status = HttpStatus.FORBIDDEN;
+    throw err;
   }
 
   return true;
 }
-
 
 function asyncHandler(fn) {
    return function(req,res,next){
@@ -67,23 +73,32 @@ const buildQuery = async ({
   perPage = 10,
   orderBy = {id: 'desc'},
   keyword = null,
-  columns = []
+  columns = [],
+  includeCount = false
 }) => {
-  return prisma[model].findMany({
-    where: keyword
-      ? {
-          OR: columns.map(col => ({
-            [col]: {
-              contains: keyword,
-              mode: "insensitive"
-            }
-          }))
-        }
-      : {},
+  const where = keyword && columns.length
+    ? {
+        OR: columns.map(col => ({
+          [col]: { contains: keyword, mode: "insensitive" }
+        }))
+      }
+    : {};
+  const skip = perPage * (page - 1);
+  const take = perPage;
+  const finalOrderBy = Object.keys(orderBy).length ? orderBy : { id: 'desc' };
 
-    skip: perPage * (page - 1),
-    take: perPage,
-    orderBy
+  if (includeCount) {
+    const [items, total] = await Promise.all([
+      prisma[model].findMany({ where, skip, take, orderBy: finalOrderBy }),
+      prisma[model].count({ where })
+    ]);
+    return { items, total, page, perPage };
+  }
+  return prisma[model].findMany({
+    where,
+    skip,
+    take,
+    orderBy: finalOrderBy
   });
 };
 
@@ -91,4 +106,4 @@ async function  passwordHash(password) {
   return  await bcrypt.hash(password, 10);
 }
 
-module.exports = { can, asyncHandler, buildQuery, normalizeQuery}; 
+module.exports = { can, isSuperAdmin, asyncHandler, buildQuery, normalizeQuery, passwordHash }; 

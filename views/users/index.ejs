@@ -3,29 +3,73 @@
     <h1 class="page-title">User Management</h1>
     <p class="page-subtitle">Manage and monitor platform members and their access levels.</p>
   </div>
-  <a href="/user/create" class="btn btn-primary">+ Add New User</a>
+  <% var _isSA_hdr = typeof user !== 'undefined' && user && user.role && user.role.name === 'super admin'; %>
+  <% if (_isSA_hdr || (typeof user !== 'undefined' && user && user.permissions && user.permissions.includes('user:create'))) { %>
+    <a href="/user/create" class="btn btn-primary">+ Add New User</a>
+  <% } %>
 </div>
 
+<div class="stat-cards" style="margin-bottom: 24px;">
+  <div class="stat-card">
+    <div class="stat-card-label">Total Registered</div>
+    <div class="stat-card-value"><%= typeof total !== 'undefined' ? total : (typeof users !== 'undefined' && users ? users.length : 0) %></div>
+    <div class="stat-card-sub">Platform members</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Shown in list</div>
+    <div class="stat-card-value"><%= typeof users !== 'undefined' && users ? users.length : 0 %></div>
+    <div class="stat-card-sub">On this page</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">Admin Roles</div>
+    <div class="stat-card-value"><%= typeof roleCount !== 'undefined' ? roleCount : 0 %></div>
+    <div class="stat-card-sub">Role types</div>
+  </div>
+</div>
+
+<%
+  var _q = typeof query !== 'undefined' ? query : {};
+  var _userPerms = (typeof user !== 'undefined' && user && user.permissions) ? user.permissions : [];
+  var _isSuperAdmin = typeof user !== 'undefined' && user && user.role && user.role.name === 'super admin';
+  var _canViewUser   = _isSuperAdmin || _userPerms.includes('user:view');
+  var _canEditUser   = _isSuperAdmin || _userPerms.includes('user:update');
+  var _canDeleteUser = _isSuperAdmin || _userPerms.includes('user:delete');
+  var _sortField = (_q.sort) ? _q.sort.split(':')[0] : '';
+  var _sortDir   = (_q.sort) ? (_q.sort.split(':')[1] || 'asc') : 'asc';
+  function _sortUrl(field) {
+    var dir = (_sortField === field && _sortDir === 'asc') ? 'desc' : 'asc';
+    var nq = Object.assign({}, _q, { sort: field+':'+dir, page: 1 });
+    return '/user?' + Object.keys(nq).filter(function(k){ return nq[k]; }).map(function(k){ return k+'='+encodeURIComponent(nq[k]); }).join('&');
+  }
+  function _sortIcon(field) { return _sortField === field ? (_sortDir === 'asc' ? ' ↑' : ' ↓') : ''; }
+  var _userList = typeof users !== 'undefined' && users ? users : [];
+%>
 <div class="card" style="margin-bottom: 24px;">
-  <div class="card-header">
-    <div class="search-input" style="max-width: 320px;">
-      <span class="search-input-icon">🔍</span>
-      <input type="text" placeholder="Search users by name, email, or role..." id="userSearch" oninput="filterUsers()">
-    </div>
+  <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+    <form method="GET" action="/user" style="display:flex; gap:8px; align-items:center;">
+      <div class="search-input" style="max-width: 320px;">
+        <span class="search-input-icon">🔍</span>
+        <input type="text" name="search" placeholder="Search by name or email…" value="<%= _q.search || '' %>">
+      </div>
+      <% if (_q.sort) { %><input type="hidden" name="sort" value="<%= _q.sort %>"><% } %>
+      <button type="submit" class="btn btn-ghost btn-sm">Search</button>
+      <% if (_q.search || _q.sort) { %><a href="/user" class="btn btn-ghost btn-sm">Clear</a><% } %>
+    </form>
   </div>
   <div class="table-wrap">
     <table class="table">
       <thead>
         <tr>
-          <th>User</th>
+          <th><a href="<%= _sortUrl('name') %>" style="color:inherit;text-decoration:none;">User<%= _sortIcon('name') %></a></th>
           <th>Role</th>
-          <th>Last Active</th>
+          <th><a href="<%= _sortUrl('createdAt') %>" style="color:inherit;text-decoration:none;">Member Since<%= _sortIcon('createdAt') %></a></th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody id="userTableBody">
-        <% if (typeof users !== 'undefined' && users && users.length) { %>
-          <% users.forEach(function(u) { %>
+        <% /* _userList already defined above */ %>
+        <% if (_userList.length) { %>
+          <% _userList.forEach(function(u) { %>
             <tr data-search="<%= (u.name || '').toLowerCase() %> <%= (u.email || '').toLowerCase() %> <%= (u.role && u.role.name ? u.role.name : '').toLowerCase() %>">
               <td>
                 <div class="user-cell">
@@ -39,20 +83,27 @@
               <td>
                 <span class="badge badge-primary"><%= (u.role && u.role.name) ? u.role.name.toUpperCase() : '—' %></span>
               </td>
-              <td>
-                <span class="badge badge-success">Active</span>
-              </td>
               <td style="color: var(--text-muted); font-size: 13px;">
                 <%= u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—' %>
               </td>
               <td>
                 <div class="table-actions">
-                  <a href="/user/<%= u.id %>" class="btn btn-ghost btn-icon btn-sm" title="View">👁</a>
-                  <a href="/user/<%= u.id %>/edit" class="btn btn-ghost btn-icon btn-sm" title="Edit">✏️</a>
-                  <form action="/user/<%= u.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this user?');">
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Delete">🗑️</button>
-                  </form>
+                  <% if (_canViewUser) { %>
+                    <a href="/user/<%= u.id %>" class="btn btn-ghost btn-icon btn-sm" title="View">👁</a>
+                  <% } %>
+                  <% if (_canEditUser) { %>
+                    <a href="/user/<%= u.id %>/edit" class="btn btn-ghost btn-icon btn-sm" title="Edit">✏️</a>
+                  <% } %>
+                  <% if (_canDeleteUser) { %>
+                    <form action="/user/<%= u.id %>" method="POST" style="display:inline;"
+                      data-confirm="Delete &quot;<%= u.name %>&quot;? This cannot be undone."
+                      data-confirm-title="Delete User"
+                      data-confirm-ok="Delete"
+                      data-confirm-danger>
+                      <input type="hidden" name="_method" value="DELETE">
+                      <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Delete">🗑️</button>
+                    </form>
+                  <% } %>
                 </div>
               </td>
             </tr>
@@ -71,40 +122,6 @@
       </tbody>
     </table>
   </div>
-  <div class="pagination">
-    <span class="pagination-info">Showing 1-<%= typeof users !== 'undefined' && users ? Math.min(users.length, 10) : 0 %> of <%= typeof users !== 'undefined' && users ? users.length : 0 %> users</span>
-    <div class="pagination-controls">
-      <button class="pagination-btn" disabled>‹</button>
-      <button class="pagination-btn active">1</button>
-      <button class="pagination-btn">›</button>
-    </div>
-  </div>
+  <%- include('../partials/pagination', { page: page, perPage: perPage, total: total, query: query, baseUrl: '/user' }) %>
 </div>
 
-<div class="stat-cards">
-  <div class="stat-card">
-    <div class="stat-card-label">Total Registered</div>
-    <div class="stat-card-value"><%= typeof users !== 'undefined' && users ? users.length : 0 %></div>
-    <div class="stat-card-sub">Platform members</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-label">Active Now</div>
-    <div class="stat-card-value"><%= typeof users !== 'undefined' && users ? users.length : 0 %></div>
-    <div class="stat-card-sub">Currently active</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-label">Admin Roles</div>
-    <div class="stat-card-value"><%= typeof roleCount !== 'undefined' ? roleCount : 0 %></div>
-    <div class="stat-card-sub">Role types</div>
-  </div>
-</div>
-
-<script>
-function filterUsers() {
-  var q = document.getElementById('userSearch').value.toLowerCase();
-  var rows = document.querySelectorAll('#userTableBody tr[data-search]');
-  rows.forEach(function(r) {
-    r.style.display = !q || (r.dataset.search || '').indexOf(q) !== -1 ? '' : 'none';
-  });
-}
-</script>

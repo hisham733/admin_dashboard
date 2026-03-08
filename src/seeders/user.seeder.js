@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 async function seedSuperAdmin() {
 
   const email = "superadmin@system.local";
-  const password = "123456";
+  const password = "password";
 
   const role = await prisma.role.findUnique({
     where: { name: "super admin" }

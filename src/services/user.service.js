@@ -2,22 +2,47 @@ const prisma = require('../configs/prisma');
 const { buildQuery, normalizeQuery, passwordHash } = require('../utilities');
 const VALIDATION_ERROR = require('../errors/validation.error');
 
-async function getUsers(query) {
+const SUPER_ADMIN_EMAIL = 'superadmin@system.local';
 
-  const { page, perPage, search, orderBy } = normalizeQuery({ query });
+async function getUsers(query, excludeUserId = null) {
+  const { page, perPage, search, orderBy } = normalizeQuery({
+    query,
+    allowedSortFields: ['name', 'email', 'createdAt']
+  });
+  const finalOrderBy = Object.keys(orderBy).length ? orderBy : { id: 'desc' };
+  const skip = perPage * (page - 1);
 
-  const where = search
-    ? { OR: [{ name: { contains: search } }, { email: { contains: search } }] }
-    : {};
-
-  return prisma.user.findMany({
-    where,
-    skip: perPage * (page - 1),
-    take: perPage,
-    orderBy: Object.keys(orderBy).length ? orderBy : { id: 'desc' },
-    include: { role: true }
+  // Always exclude super admin account and optionally the current user
+  const superAdmin = await prisma.user.findFirst({
+    where: { email: SUPER_ADMIN_EMAIL },
+    select: { id: true }
   });
 
+  const excludeIds = [superAdmin?.id].filter(Boolean);
+  if (excludeUserId) excludeIds.push(excludeUserId);
+
+  const where = {
+    NOT: { id: { in: excludeIds } },
+    ...(search ? {
+      OR: [
+        { name: { contains: search } },
+        { email: { contains: search } }
+      ]
+    } : {})
+  };
+
+  const [items, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      skip,
+      take: perPage,
+      orderBy: finalOrderBy,
+      include: { role: true }
+    }),
+    prisma.user.count({ where })
+  ]);
+
+  return { items, total, page, perPage };
 }
 
 async function getUser(id) { 
@@ -34,7 +59,7 @@ async function storeUser(name, email, password, confirmPassword, roleId = null) 
   if (roleId) {
     role = await prisma.role.findFirst({
       where: {
-        id: roleId
+        id: Number(roleId)
       }
     });
 
@@ -61,10 +86,10 @@ async function storeUser(name, email, password, confirmPassword, roleId = null) 
     data: {
       name,
       email,
-      password: passwordHash(password),
+      password: await passwordHash(password),
        ...(roleId && {
         role: {
-          connect: { id: roleId }
+          connect: { id: Number(roleId) }
         }
       })
     }
@@ -94,7 +119,7 @@ async function updateUser(
 
   if (roleId) {
     const role = await prisma.role.findFirst({
-      where: { id: roleId }
+      where: { id: Number(roleId) }
     });
 
     if (!role) {
@@ -130,7 +155,7 @@ async function updateUser(
 
   if (roleId) {
     data.role = {
-      connect: { id: roleId }
+      connect: { id: Number(roleId) }
     };
   }
 

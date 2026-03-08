@@ -9,6 +9,7 @@ async function seedRoles() {
   const adminPermissions = permissionNames.filter(
     p => !p.startsWith('role') && !p.startsWith('permission')
   );
+  // admin can also manage all forms
 
   const superAdminPermissions = permissionNames;
 

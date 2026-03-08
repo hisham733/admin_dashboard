@@ -9,7 +9,9 @@ async function seedPermissions() {
     .map(model => actions.map(action => `${model}:${action}`))
     .flat();
  
-  permissions.push('dashboard:view'); 
+  permissions.push('dashboard:view');
+  permissions.push('form:manage_all');
+  permissions.push('form:activate');
 
   for (const permission of permissions) {
 

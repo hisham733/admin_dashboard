@@ -6,14 +6,14 @@ const prisma = require('../configs/prisma');
 async function getUsers(req, res) {
   can(req.session.user, 'user:list');
 
-  const query = req.query;
-  const users = await userService.getUsers(query);
-  const roles = await roleService.getRoles({ perPage: 100 });
-  const roleCount = await prisma.role.count();
+  const currentUserId = req.session.user?.id || null;
+  const { items: users, total, page, perPage } = await userService.getUsers(req.query, currentUserId);
+  const { items: roles } = await roleService.getRoles({ perPage: 100 }, true);
+  const roleCount = await prisma.role.count({ where: { NOT: { name: 'super admin' } } });
 
   res.render('layouts/main', {
     contentPartial: 'users/index',
-    contentData: { users, roles, roleCount },
+    contentData: { users, total, page, perPage, roles, roleCount, query: req.query },
     activeSection: 'users',
     title: 'User Management'
   });
@@ -29,7 +29,7 @@ async function editUser(req, res) {
     return res.redirect('/user');
   }
 
-  const roles = await roleService.getRoles({ perPage: 100 });
+  const { items: roles } = await roleService.getRoles({ perPage: 100 }, true);
 
   res.render('layouts/main', {
     contentPartial: 'users/show',
@@ -39,8 +39,8 @@ async function editUser(req, res) {
   });
 }
 
-async function showUser(req, res) {
-  can(req.session.user, 'user:show');
+async function getUser(req, res) {
+  can(req.session.user, 'user:view');
 
   const id = Number(req.params.id);
   const user = await userService.getUser(id);
@@ -62,7 +62,7 @@ async function showUser(req, res) {
 async function createUser(req, res) {
   can(req.session.user, 'user:create');
 
-  const roles = await roleService.getRoles({ perPage: 100 });
+  const { items: roles } = await roleService.getRoles({ perPage: 100 }, true);
   const permissions = await roleService.getAllPermissions();
 
   res.render('layouts/main', {
@@ -86,7 +86,7 @@ async function storeUser(req, res) {
     roleId
   );
 
-  res.redirect(`/user/${user.id}`);
+  res.redirect(`/user/${user.id}?success=${encodeURIComponent('User created successfully')}`);
 }
 
 async function updateUser(req, res) {
@@ -105,7 +105,7 @@ async function updateUser(req, res) {
     roleId
   );
 
-  res.redirect(`/user/${user.id}`);
+  res.redirect(`/user/${user.id}?success=${encodeURIComponent('User updated successfully')}`);
 }
 
 async function deleteUser(req, res) {
@@ -115,12 +115,12 @@ async function deleteUser(req, res) {
 
   await userService.deleteUser(id);
 
-  res.redirect('/user');
+  res.redirect('/user?success=' + encodeURIComponent('User deleted successfully'));
 }
 
 module.exports = {
   getUsers,
-  showUser,
+  getUser,
   createUser,
   editUser,
   storeUser,

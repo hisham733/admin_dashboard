@@ -1,8 +1,8 @@
 <div class="section-header">
   <div>
     <a href="/form" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Forms</a>
-    <h1 class="page-title">Create Form Template</h1>
-    <p class="page-subtitle">Design your custom form template with fields and types.</p>
+    <h1 class="page-title">Edit: <%= form.name %></h1>
+    <p class="page-subtitle">Update your form template.</p>
   </div>
 </div>
 
@@ -16,7 +16,7 @@
       <label class="form-builder-label">Template Info</label>
       <div class="form-group">
         <label class="form-label">Template Name</label>
-        <input type="text" class="form-input" id="templateName" placeholder="e.g. Print Order Form, Invoice Form…">
+        <input type="text" class="form-input" id="templateName" value="<%= form.name %>" placeholder="e.g. Print Order Form">
       </div>
     </div>
 
@@ -36,10 +36,10 @@
     <div class="form-builder-submit">
       <div class="form-builder-submit-info">
         <strong>Ready to save?</strong>
-        Fill in all field names and click Save Template
+        Click Save Template to update
       </div>
       <div style="display:flex;gap:10px;">
-        <button type="button" class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+        <a href="/form/<%= form.id %>" class="btn btn-secondary">Cancel</a>
         <button type="button" class="btn btn-primary" onclick="submitTemplate()">Save Template →</button>
       </div>
     </div>
@@ -76,6 +76,7 @@
 </style>
 
 <script>
+var formId = '<%= form.id %>';
 var fields = [];
 var idCounter = 0;
 var TYPES = [
@@ -88,6 +89,10 @@ var TYPES = [
   { value: 'textarea', label: 'Long Text' },
   { value: 'file', label: 'File / PDF' }
 ];
+<% if (form.fields && Array.isArray(form.fields) && form.fields.length) { %>
+fields = <%- JSON.stringify(form.fields) %>.map(function(f, i) { return { id: i + 1, name: f.name, type: f.type || 'string', is_required: f.is_required !== false }; });
+idCounter = fields.length;
+<% } %>
 function addField() {
   var id = ++idCounter;
   fields.push({ id: id });
@@ -119,19 +124,16 @@ function renderFields() {
   var typeOpts = TYPES.map(function(t) { return '<option value="' + t.value + '">' + t.label + '</option>'; }).join('');
   list.innerHTML = fields.map(function(f, i) {
     return '<div class="form-builder-field-row" id="field-' + f.id + '">' +
-      '<div class="fg"><label class="flabel">Field Name</label><input class="finput" type="text" placeholder="e.g. client_name, quantity…" oninput="updateField(' + f.id + ',\'name\',this.value)"></div>' +
+      '<div class="fg"><label class="flabel">Field Name</label><input class="finput" type="text" placeholder="e.g. client_name" value="' + (f.name || '').replace(/"/g, '&quot;') + '" oninput="updateField(' + f.id + ',\'name\',this.value)"></div>' +
       '<div class="fg"><label class="flabel">Required?</label><div class="radio-group">' +
-      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_yes_' + f.id + '" value="true" onchange="updateField(' + f.id + ',\'is_required\',true)" checked><label for="req_yes_' + f.id + '">Yes</label></div>' +
-      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_no_' + f.id + '" value="false" onchange="updateField(' + f.id + ',\'is_required\',false)"><label for="req_no_' + f.id + '">No</label></div></div></div>' +
+      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_yes_' + f.id + '" value="true" onchange="updateField(' + f.id + ',\'is_required\',true)" ' + (f.is_required !== false ? 'checked' : '') + '><label for="req_yes_' + f.id + '">Yes</label></div>' +
+      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_no_' + f.id + '" value="false" onchange="updateField(' + f.id + ',\'is_required\',false)" ' + (f.is_required === false ? 'checked' : '') + '><label for="req_no_' + f.id + '">No</label></div></div></div>' +
       '<div class="fg"><label class="flabel">Type</label><select class="fselect" onchange="updateField(' + f.id + ',\'type\',this.value)">' + typeOpts + '</select></div>' +
       '<button type="button" class="del-btn" onclick="removeField(' + f.id + ')" title="Remove">✕</button></div>';
   }).join('');
   fields.forEach(function(f) {
-    var nameEl = document.querySelector('#field-' + f.id + ' .finput');
     var typeEl = document.querySelector('#field-' + f.id + ' .fselect');
-    if (f.name && nameEl) nameEl.value = f.name;
     if (f.type && typeEl) typeEl.value = f.type;
-    if (f.is_required === false) { var r = document.getElementById('req_no_' + f.id); if (r) r.checked = true; }
   });
 }
 function showAlert(msg) {
@@ -139,15 +141,6 @@ function showAlert(msg) {
   box.textContent = '⚠️ ' + msg;
   box.style.display = 'block';
   setTimeout(function() { box.style.display = 'none'; }, 3500);
-}
-function clearAll() {
-  if (fields.length === 0) return;
-  window.showConfirm({ title: 'Clear all fields?', message: 'All fields will be removed and the template name will be cleared.', okLabel: 'Clear', okClass: 'btn-danger', icon: '🗑️' }, function() {
-    fields = [];
-    idCounter = 0;
-    document.getElementById('templateName').value = '';
-    renderFields();
-  });
 }
 function submitTemplate() {
   fields.forEach(function(f) {
@@ -167,8 +160,8 @@ function submitTemplate() {
     template_name: templateName || null,
     fields: fields.map(function(f) { return { name: f.name, is_required: f.is_required !== false, type: f.type || 'string' }; })
   };
-  fetch('/form', {
-    method: 'POST',
+  fetch('/form/' + formId, {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify(payload)
   })
@@ -176,8 +169,8 @@ function submitTemplate() {
     if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || 'Server error'); }).catch(function() { throw new Error('Server error ' + res.status); });
     return res.json();
   })
-  .then(function(data) {
-    window.location.href = '/form/' + (data.id || data);
+  .then(function() {
+    window.location.href = '/form/' + formId;
   })
   .catch(function(err) {
     showAlert(err.message || 'Failed to save');

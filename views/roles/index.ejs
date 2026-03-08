@@ -1,15 +1,33 @@
+<%
+  var _q = typeof query !== 'undefined' ? query : {};
+  var _rolePerms = (typeof user !== 'undefined' && user && user.permissions) ? user.permissions : [];
+  var _isSuperAdmin = typeof user !== 'undefined' && user && user.role && user.role.name === 'super admin';
+  var _canCreateRole = _isSuperAdmin || _rolePerms.includes('role:create');
+  var _canEditRole   = _isSuperAdmin || _rolePerms.includes('role:update');
+  var _canDeleteRole = _isSuperAdmin || _rolePerms.includes('role:delete');
+  var _sortField = (_q.sort) ? _q.sort.split(':')[0] : '';
+  var _sortDir   = (_q.sort) ? (_q.sort.split(':')[1] || 'asc') : 'asc';
+  function _sortUrl(field) {
+    var dir = (_sortField === field && _sortDir === 'asc') ? 'desc' : 'asc';
+    var nq = Object.assign({}, _q, { sort: field+':'+dir, page: 1 });
+    return '/role?' + Object.keys(nq).filter(function(k){ return nq[k]; }).map(function(k){ return k+'='+encodeURIComponent(nq[k]); }).join('&');
+  }
+  function _sortIcon(field) { return _sortField === field ? (_sortDir === 'asc' ? ' ↑' : ' ↓') : ''; }
+%>
 <div class="section-header">
   <div>
     <h1 class="page-title">Role Management</h1>
     <p class="page-subtitle">Define access levels and permission scopes for your organization.</p>
   </div>
-  <a href="/role/create" class="btn btn-primary">+ Add New Role</a>
+  <% if (_canCreateRole) { %>
+    <a href="/role/create" class="btn btn-primary">+ Add New Role</a>
+  <% } %>
 </div>
 
 <div class="stat-cards">
   <div class="stat-card">
     <div class="stat-card-label">Total Roles</div>
-    <div class="stat-card-value"><%= typeof roles !== 'undefined' && roles ? roles.length : 0 %></div>
+    <div class="stat-card-value"><%= typeof total !== 'undefined' ? total : (typeof roles !== 'undefined' && roles ? roles.length : 0) %></div>
     <div class="stat-card-sub">Role types</div>
   </div>
   <div class="stat-card">
@@ -25,11 +43,22 @@
 </div>
 
 <div class="card">
+  <div class="card-header" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <form method="GET" action="/role" style="display:flex; gap:8px; align-items:center;">
+      <div class="search-input" style="max-width:280px;">
+        <span class="search-input-icon">🔍</span>
+        <input type="text" name="search" placeholder="Search roles…" value="<%= _q.search || '' %>">
+      </div>
+      <% if (_q.sort) { %><input type="hidden" name="sort" value="<%= _q.sort %>"><% } %>
+      <button type="submit" class="btn btn-ghost btn-sm">Search</button>
+      <% if (_q.search || _q.sort) { %><a href="/role" class="btn btn-ghost btn-sm">Clear</a><% } %>
+    </form>
+  </div>
   <div class="table-wrap">
     <table class="table">
       <thead>
         <tr>
-          <th>Role Name</th>
+          <th><a href="<%= _sortUrl('name') %>" style="color:inherit;text-decoration:none;">Role Name<%= _sortIcon('name') %></a></th>
           <th>Permissions</th>
           <th>Assigned To</th>
           <th>Actions</th>
@@ -81,14 +110,22 @@
               </td>
               <td>
                 <div class="table-actions">
-                  <a href="/role/<%= r.id %>/edit" class="btn btn-ghost btn-icon btn-sm" title="Edit">✏️</a>
-                  <% if (count === 0) { %>
-                    <form action="/role/<%= r.id %>" method="POST" style="display:inline;" onsubmit="return confirm('Delete this role?');">
-                      <input type="hidden" name="_method" value="DELETE">
-                      <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Delete">🗑️</button>
-                    </form>
-                  <% } else { %>
-                    <button type="button" class="btn btn-ghost btn-icon btn-sm" title="Cannot delete - assigned to users" disabled>🗑️</button>
+                  <% if (_canEditRole) { %>
+                    <a href="/role/<%= r.id %>/edit" class="btn btn-ghost btn-icon btn-sm" title="Edit">✏️</a>
+                  <% } %>
+                  <% if (_canDeleteRole) { %>
+                    <% if (count === 0) { %>
+                      <form action="/role/<%= r.id %>" method="POST" style="display:inline;"
+                        data-confirm="Delete role &quot;<%= r.name %>&quot;? This cannot be undone."
+                        data-confirm-title="Delete Role"
+                        data-confirm-ok="Delete"
+                        data-confirm-danger>
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="btn btn-ghost btn-icon btn-sm" title="Delete">🗑️</button>
+                      </form>
+                    <% } else { %>
+                      <button type="button" class="btn btn-ghost btn-icon btn-sm" title="Cannot delete — assigned to users" disabled>🗑️</button>
+                    <% } %>
                   <% } %>
                 </div>
               </td>
@@ -108,7 +145,5 @@
       </tbody>
     </table>
   </div>
-  <div class="pagination">
-    <span class="pagination-info">Showing <%= typeof roles !== 'undefined' && roles ? roles.length : 0 %> of <%= typeof roles !== 'undefined' && roles ? roles.length : 0 %> roles</span>
-  </div>
+  <%- include('../partials/pagination', { page: page, perPage: perPage, total: total, query: query, baseUrl: '/role' }) %>
 </div>

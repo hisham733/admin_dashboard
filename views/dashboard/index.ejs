@@ -3,7 +3,7 @@
 <div class="section-header">
   <h1 class="page-title">Business Overview</h1>
   <p class="page-subtitle">Real-time order management & analytics</p>
-</div>
+    </div>
 
 <div class="stat-cards">
   <div class="stat-card">
@@ -31,7 +31,7 @@
     <div class="stat-card-value" id="wCustomers">0</div>
     <div class="stat-card-sub">Unique identities</div>
   </div>
-</div>
+  </div>
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px;">
   <div class="card">
@@ -85,8 +85,8 @@
   </div>
   <div class="pagination">
     <span class="pagination-info" id="tCount">0 orders</span>
+    </div>
   </div>
-</div>
 
 <script>
 var ORDERS = <%- JSON.stringify(typeof orders !== 'undefined' ? orders : []) %>;
