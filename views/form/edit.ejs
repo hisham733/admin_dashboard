@@ -2,7 +2,7 @@
   <div>
     <a href="/form" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Forms</a>
     <h1 class="page-title">Edit: <%= form.name %></h1>
-    <p class="page-subtitle">Update your form template.</p>
+    <p class="page-subtitle">Update your form template. <% if (form.isActive) { %><span class="badge badge-success">Active</span><% } else { %><span class="badge badge-muted">Inactive</span><% } %></p>
   </div>
 </div>
 
@@ -38,9 +38,26 @@
         <strong>Ready to save?</strong>
         Click Save Template to update
       </div>
-      <div style="display:flex;gap:10px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <a href="/form/<%= form.id %>" class="btn btn-secondary">Cancel</a>
         <button type="button" class="btn btn-primary" onclick="submitTemplate()">Save Template →</button>
+        <% if (typeof canActivate !== 'undefined' && canActivate) { %>
+          <% if (form.isActive) { %>
+            <form action="/form/<%= form.id %>/deactivate" method="POST" style="display:inline;"
+              data-confirm="Deactivate &quot;<%= form.name %>&quot;? No form will be active after this."
+              data-confirm-title="Deactivate Form"
+              data-confirm-ok="Deactivate">
+              <button type="submit" class="btn btn-ghost" style="color: var(--warning, #f59e0b);">Deactivate</button>
+            </form>
+          <% } else { %>
+            <form action="/form/<%= form.id %>/activate" method="POST" style="display:inline;"
+              data-confirm="Set &quot;<%= form.name %>&quot; as the active form? The current active form will be deactivated."
+              data-confirm-title="Activate Form"
+              data-confirm-ok="Activate">
+              <button type="submit" class="btn btn-ghost" style="color: var(--success);">Activate</button>
+            </form>
+          <% } %>
+        <% } %>
       </div>
     </div>
   </div>

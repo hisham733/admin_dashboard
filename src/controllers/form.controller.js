@@ -82,7 +82,7 @@ async function editForm(req, res) {
   assertFormAccess(form, req);
   res.render('layouts/main', {
     contentPartial: 'form/edit',
-    contentData: { form, canManageAll: hasManageAll(req) },
+    contentData: { form, canManageAll: hasManageAll(req), canActivate: hasActivate(req) },
     activeSection: 'forms',
     title: 'Edit: ' + form.name
   });

@@ -85,10 +85,13 @@ async function storeForm({ template_name, fields }, createdById = null) {
   if (names.some((n, i) => names.indexOf(n) !== i)) {
     throw new VALIDATION_ERROR('Field names must be unique');
   }
+  const existingCount = await prisma.formTemplate.count();
+  const isFirstForm = existingCount === 0;
   return prisma.formTemplate.create({
     data: {
       name,
       fields: fieldList,
+      isActive: isFirstForm,
       ...(createdById ? { createdById } : {})
     }
   });
