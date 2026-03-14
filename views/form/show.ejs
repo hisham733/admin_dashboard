@@ -15,23 +15,35 @@
     </div>
     <div class="form-group">
       <label class="form-label">Fields</label>
-      <% var fieldList = Array.isArray(form.fields) ? form.fields : []; %>
+      <%
+        var fieldList = Array.isArray(form.fields) ? form.fields : [];
+        var typeLabels = { string: 'Short text', number: 'Number', email: 'Email', phone: 'Phone', date: 'Date', boolean: 'Yes or No', textarea: 'Paragraph', options: 'Choose from list' };
+      %>
       <% if (fieldList.length) { %>
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th>Field Name</th>
+                <th>Field name</th>
                 <th>Type</th>
                 <th>Required</th>
+                <% if (fieldList.some(function(f) { return f.type === 'options'; })) { %><th>Choices</th><% } %>
               </tr>
             </thead>
             <tbody>
               <% fieldList.forEach(function(f) { %>
                 <tr>
                   <td><strong><%= f.name %></strong></td>
-                  <td><span class="badge badge-muted"><%= f.type || 'string' %></span></td>
+                  <td><span class="badge badge-muted"><%= typeLabels[f.type || 'string'] || f.type %></span></td>
                   <td><%= f.is_required !== false ? 'Yes' : 'No' %></td>
+                  <% if (fieldList.some(function(x) { return x.type === 'options'; })) { %>
+                  <td>
+                    <% if (f.type === 'options') { %>
+                      <%= Array.isArray(f.options) ? f.options.join(', ') : '—' %>
+                      <% if (f.default_option) { %> · Pre-selected: <%= f.default_option %><% } %>
+                    <% } else { %>—<% } %>
+                  </td>
+                  <% } %>
                 </tr>
               <% }); %>
             </tbody>

@@ -31,21 +31,42 @@ async function getForms(query = {}, userId = null, canManageAll = false) {
   return { items, total, page, perPage };
 }
 
+function ensureFieldsStructure(fields) {
+  if (!fields) return [];
+  const arr = Array.isArray(fields) ? fields : (typeof fields === 'string' ? (() => { try { return JSON.parse(fields); } catch { return []; } })() : []);
+  return arr.map((f) => {
+    const base = { name: f.name || '', type: f.type || 'string', is_required: f.is_required !== false };
+    if (f.type === 'options') {
+      base.options = Array.isArray(f.options) ? f.options.filter(Boolean) : [];
+      base.default_option = (f.default_option && String(f.default_option).trim()) || null;
+    }
+    return base;
+  });
+}
+
 async function getForm(id) {
   const form = await prisma.formTemplate.findFirst({
     where: { id: Number(id) }
   });
   if (!form) throw new VALIDATION_ERROR('Form template not found');
+  form.fields = ensureFieldsStructure(form.fields);
   return form;
 }
 
 function normalizeFields(fields) {
   if (!Array.isArray(fields)) return [];
-  return fields.map((f) => ({
-    name: (f.name && String(f.name).trim()) || '',
-    type: f.type || 'string',
-    is_required: f.is_required !== false
-  }));
+  return fields.map((f) => {
+    const base = {
+      name: (f.name && String(f.name).trim()) || '',
+      type: f.type || 'string',
+      is_required: f.is_required !== false
+    };
+    if (f.type === 'options') {
+      base.options = Array.isArray(f.options) ? f.options.filter(Boolean) : [];
+      base.default_option = (f.default_option && String(f.default_option).trim()) || null;
+    }
+    return base;
+  });
 }
 
 async function storeForm({ template_name, fields }, createdById = null) {
@@ -53,6 +74,12 @@ async function storeForm({ template_name, fields }, createdById = null) {
   const fieldList = normalizeFields(fields || []);
   if (fieldList.some((f) => !f.name)) {
     throw new VALIDATION_ERROR('All fields must have a name');
+  }
+  if (fieldList.some((f) => f.type === 'options' && (!f.options?.length))) {
+    throw new VALIDATION_ERROR('Choose from list fields must have at least one choice');
+  }
+  if (fieldList.some((f) => f.type === 'options' && f.default_option && !f.options?.includes(f.default_option))) {
+    throw new VALIDATION_ERROR('Pre-selected must be one of the choices');
   }
   const names = fieldList.map((f) => f.name);
   if (names.some((n, i) => names.indexOf(n) !== i)) {
@@ -73,6 +100,12 @@ async function updateForm(id, { template_name, fields }) {
   const fieldList = normalizeFields(fields || []);
   if (fieldList.some((f) => !f.name)) {
     throw new VALIDATION_ERROR('All fields must have a name');
+  }
+  if (fieldList.some((f) => f.type === 'options' && (!f.options?.length))) {
+    throw new VALIDATION_ERROR('Choose from list fields must have at least one choice');
+  }
+  if (fieldList.some((f) => f.type === 'options' && f.default_option && !f.options?.includes(f.default_option))) {
+    throw new VALIDATION_ERROR('Pre-selected must be one of the choices');
   }
   const names = fieldList.map((f) => f.name);
   if (names.some((n, i) => names.indexOf(n) !== i)) {

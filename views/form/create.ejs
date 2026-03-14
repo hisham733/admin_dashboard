@@ -57,12 +57,22 @@
 .form-builder-empty { padding: 24px; margin-bottom: 12px; display: none; }
 .form-builder-empty.show { display: block; }
 .form-builder-field-row { display: grid; grid-template-columns: 1fr 160px 140px 40px; gap: 12px; align-items: end; padding: 16px; background: var(--surface-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-md); border-left: 3px solid var(--accent); }
+.form-builder-field-row.form-builder-field-options { grid-template-columns: 1fr; }
+.form-builder-field-row.form-builder-field-options .field-main { display: grid; grid-template-columns: 1fr 160px 140px 40px; gap: 12px; align-items: end; }
+.form-builder-field-row.form-builder-field-options .field-options-extra { grid-column: 1; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-default); display: grid; gap: 12px; }
+.opts-list { display: flex; flex-direction: column; gap: 8px; }
+.opts-row { display: flex; gap: 8px; align-items: center; }
+.opts-row .opts-item { flex: 1; }
+.opts-remove { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--error-muted); border: 1px solid var(--error); color: var(--error); cursor: pointer; flex-shrink: 0; }
+.opts-remove:hover { background: var(--error); color: white; }
 @media (max-width: 700px) { .form-builder-field-row { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
   .form-builder-field-row .fg:first-child { grid-column: span 2; }
-  .form-builder-field-row .del-btn { grid-column: 2; grid-row: 2; justify-self: end; } }
+  .form-builder-field-row .del-btn { grid-column: 2; grid-row: 2; justify-self: end; }
+  .form-builder-field-row.form-builder-field-options .field-main { grid-template-columns: 1fr 1fr; } }
 .form-builder-field-row .fg { display: flex; flex-direction: column; gap: 4px; }
 .form-builder-field-row .flabel { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
-.form-builder-field-row .finput, .form-builder-field-row .fselect { width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--surface-primary); color: var(--text-primary); }
+.form-builder-field-row .finput, .form-builder-field-row .fselect, .form-builder-field-row textarea.finput { width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--surface-primary); color: var(--text-primary); }
+.form-builder-field-row textarea.finput { resize: vertical; min-height: 50px; }
 .form-builder-field-row .radio-group { display: flex; gap: 8px; }
 .form-builder-field-row .radio-opt { flex: 1; }
 .form-builder-field-row .radio-opt input { position: absolute; opacity: 0; }
@@ -79,14 +89,14 @@
 var fields = [];
 var idCounter = 0;
 var TYPES = [
-  { value: 'string', label: 'String (Text)' },
+  { value: 'string', label: 'Short text' },
   { value: 'number', label: 'Number' },
   { value: 'email', label: 'Email' },
   { value: 'phone', label: 'Phone' },
   { value: 'date', label: 'Date' },
-  { value: 'boolean', label: 'Boolean (Yes/No)' },
-  { value: 'textarea', label: 'Long Text' },
-  { value: 'file', label: 'File / PDF' }
+  { value: 'boolean', label: 'Yes or No' },
+  { value: 'textarea', label: 'Paragraph' },
+  { value: 'options', label: 'Choose from list' }
 ];
 function addField() {
   var id = ++idCounter;
@@ -118,21 +128,58 @@ function renderFields() {
   empty.classList.remove('show');
   var typeOpts = TYPES.map(function(t) { return '<option value="' + t.value + '">' + t.label + '</option>'; }).join('');
   list.innerHTML = fields.map(function(f, i) {
-    return '<div class="form-builder-field-row" id="field-' + f.id + '">' +
-      '<div class="fg"><label class="flabel">Field Name</label><input class="finput" type="text" placeholder="e.g. client_name, quantity…" oninput="updateField(' + f.id + ',\'name\',this.value)"></div>' +
-      '<div class="fg"><label class="flabel">Required?</label><div class="radio-group">' +
-      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_yes_' + f.id + '" value="true" onchange="updateField(' + f.id + ',\'is_required\',true)" checked><label for="req_yes_' + f.id + '">Yes</label></div>' +
-      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_no_' + f.id + '" value="false" onchange="updateField(' + f.id + ',\'is_required\',false)"><label for="req_no_' + f.id + '">No</label></div></div></div>' +
-      '<div class="fg"><label class="flabel">Type</label><select class="fselect" onchange="updateField(' + f.id + ',\'type\',this.value)">' + typeOpts + '</select></div>' +
-      '<button type="button" class="del-btn" onclick="removeField(' + f.id + ')" title="Remove">✕</button></div>';
+    var isOpt = f.type === 'options';
+    var optsList = [];
+    if (isOpt && Array.isArray(f.options)) {
+      f.options.forEach(function(opt, idx) {
+        var val = (typeof opt === 'string' ? opt : (opt.value || '')).replace(/"/g, '&quot;');
+        optsList.push('<div class="opts-row" data-fid="' + f.id + '" data-oidx="' + idx + '"><input class="finput opts-item" type="text" placeholder="e.g. A4, Small, Blue" value="' + val + '"><button type="button" class="opts-remove" onclick="removeOption(' + f.id + ',' + idx + ')">✕</button></div>');
+      });
+    }
+    var optsExtra = isOpt ? '<div class="field-options-extra" id="opts-' + f.id + '">' +
+      '<label class="flabel">Choices</label>' +
+      '<div class="opts-list" id="opts-list-' + f.id + '">' + optsList.join('') + '</div>' +
+      '<button type="button" class="btn btn-ghost btn-sm opts-add" onclick="addOption(' + f.id + ')">+ Add choice</button>' +
+      '<div class="fg" style="margin-top:12px;"><label class="flabel">Pre-selected (optional)</label><select class="fselect opts-default" data-id="' + f.id + '"><option value="">None</option>' +
+      (Array.isArray(f.options) ? f.options.filter(function(o) { var v = typeof o === 'string' ? o : (o.value || ''); return v; }).map(function(o) { var v = typeof o === 'string' ? o : (o.value || ''); return '<option value="' + v.replace(/"/g, '&quot;') + '"' + (f.default_option === v ? ' selected' : '') + '>' + v.replace(/</g, '&lt;') + '</option>'; }).join('') : '') +
+      '</select></div></div>' : '';
+    return '<div class="form-builder-field-row' + (isOpt ? ' form-builder-field-options' : '') + '" id="field-' + f.id + '">' +
+      '<div class="field-main">' +
+      '<div class="fg"><label class="flabel">Field name</label><input class="finput" type="text" placeholder="e.g. client_name, paper_size" oninput="updateField(' + f.id + ',\'name\',this.value)" value="' + (f.name || '').replace(/"/g, '&quot;') + '"></div>' +
+      '<div class="fg"><label class="flabel">Required</label><div class="radio-group">' +
+      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_yes_' + f.id + '" value="true" onchange="updateField(' + f.id + ',\'is_required\',true)" ' + (f.is_required !== false ? 'checked' : '') + '><label for="req_yes_' + f.id + '">Yes</label></div>' +
+      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_no_' + f.id + '" value="false" onchange="updateField(' + f.id + ',\'is_required\',false)" ' + (f.is_required === false ? 'checked' : '') + '><label for="req_no_' + f.id + '">No</label></div></div></div>' +
+      '<div class="fg"><label class="flabel">Field type</label><select class="fselect" onchange="updateField(' + f.id + ',\'type\',this.value); renderFields();">' + typeOpts + '</select></div>' +
+      '<button type="button" class="del-btn" onclick="removeField(' + f.id + ')" title="Remove">✕</button>' +
+      '</div>' + optsExtra + '</div>';
   }).join('');
   fields.forEach(function(f) {
-    var nameEl = document.querySelector('#field-' + f.id + ' .finput');
-    var typeEl = document.querySelector('#field-' + f.id + ' .fselect');
+    var nameEl = document.querySelector('#field-' + f.id + ' .finput:not(.opts-item)');
+    var typeEl = document.querySelector('#field-' + f.id + ' .fselect:not(.opts-default)');
     if (f.name && nameEl) nameEl.value = f.name;
     if (f.type && typeEl) typeEl.value = f.type;
     if (f.is_required === false) { var r = document.getElementById('req_no_' + f.id); if (r) r.checked = true; }
   });
+}
+function collectOptionsFromField(fid) {
+  var items = document.querySelectorAll('#field-' + fid + ' .opts-item');
+  var arr = [];
+  items.forEach(function(inp) { arr.push(inp.value.trim()); });
+  return arr;
+}
+function addOption(fid) {
+  var f = fields.find(function(x) { return x.id === fid; });
+  if (!f) return;
+  f.options = collectOptionsFromField(fid);
+  f.options.push('');
+  renderFields();
+}
+function removeOption(fid, idx) {
+  var f = fields.find(function(x) { return x.id === fid; });
+  if (!f) return;
+  f.options = collectOptionsFromField(fid);
+  f.options.splice(idx, 1);
+  renderFields();
 }
 function showAlert(msg) {
   var box = document.getElementById('alertBox');
@@ -151,21 +198,44 @@ function clearAll() {
 }
 function submitTemplate() {
   fields.forEach(function(f) {
-    var nameEl = document.querySelector('#field-' + f.id + ' .finput');
-    var typeEl = document.querySelector('#field-' + f.id + ' .fselect');
+    var nameEl = document.querySelector('#field-' + f.id + ' .finput:not(.opts-item)');
+    var typeEl = document.querySelector('#field-' + f.id + ' .fselect:not(.opts-default)');
     var reqEl = document.querySelector('input[name="req_' + f.id + '"]:checked');
     if (nameEl) f.name = nameEl.value.trim();
     if (typeEl) f.type = typeEl.value;
     if (reqEl) f.is_required = reqEl.value === 'true';
+    if (f.type === 'options') {
+      var items = document.querySelectorAll('#field-' + f.id + ' .opts-item');
+      f.options = [];
+      items.forEach(function(inp) { var v = inp.value.trim(); if (v) f.options.push(v); });
+      var defEl = document.querySelector('#field-' + f.id + ' .opts-default');
+      f.default_option = (defEl && defEl.value) ? defEl.value : null;
+    }
   });
   if (fields.length === 0) { showAlert('Add at least one field before saving.'); return; }
   if (fields.some(function(f) { return !f.name; })) { showAlert('All fields must have a name.'); return; }
+  if (fields.some(function(f) { return f.type === 'options' && (!f.options || f.options.length === 0); })) {
+    showAlert('Choose from list fields need at least one choice.'); return;
+  }
+  if (fields.some(function(f) {
+    if (f.type !== 'options' || !f.default_option) return false;
+    return f.options.indexOf(f.default_option) === -1;
+  })) {
+    showAlert('Pre-selected must be one of the choices above.'); return;
+  }
   var names = fields.map(function(f) { return f.name; });
   if (names.some(function(n, i) { return names.indexOf(n) !== i; })) { showAlert('Field names must be unique.'); return; }
   var templateName = document.getElementById('templateName').value.trim();
   var payload = {
     template_name: templateName || null,
-    fields: fields.map(function(f) { return { name: f.name, is_required: f.is_required !== false, type: f.type || 'string' }; })
+    fields: fields.map(function(f) {
+      var base = { name: f.name, is_required: f.is_required !== false, type: f.type || 'string' };
+      if (f.type === 'options') {
+        base.options = Array.isArray(f.options) ? f.options.filter(Boolean) : [];
+        base.default_option = (f.default_option && String(f.default_option).trim()) || null;
+      }
+      return base;
+    })
   };
   fetch('/form', {
     method: 'POST',
