@@ -5,7 +5,9 @@ module.exports = {
     port: process.env.APP_PORT || 3000,
     url: process.env.URL || 'http://localhost', 
     database_url: process.env.DATABASE_URL,
-    env: process.env.ENV
+    env: process.env.ENV,
+    super_admin_email: 'superadmin@system.local',  
+    super_admin_password: 'password'
   },
   ui: {
     systemName: process.env.SYSTEM_NAME || 'Admin Console',

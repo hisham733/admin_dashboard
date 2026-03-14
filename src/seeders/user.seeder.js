@@ -1,10 +1,11 @@
 const prisma = require('../configs/prisma');
 const bcrypt = require('bcrypt');
+const {app} = require('../configs/app.config');
 
 async function seedSuperAdmin() {
 
-  const email = "superadmin@system.local";
-  const password = "password";
+  const email = app.super_admin_email;
+  const password = app.super_admin_password;
 
   const role = await prisma.role.findUnique({
     where: { name: "super admin" }
