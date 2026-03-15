@@ -1,0 +1,91 @@
+<div class="preview-panel" id="previewPanel">
+  <div class="preview-panel-header">
+    <span class="preview-panel-title">Live Preview</span>
+    <button type="button" class="btn btn-ghost btn-sm" id="previewToggle" title="Hide preview">◀ Hide</button>
+  </div>
+  <div class="preview-panel-content" id="previewContent">
+    <div class="preview-placeholder" id="previewNoTemplate" style="display:none;">
+      <p><%= typeof noTemplateMessage !== 'undefined' ? noTemplateMessage : 'There is no template currently added.' %></p>
+    </div>
+    <iframe id="previewIframe" style="display:none;" title="Form preview"></iframe>
+  </div>
+</div>
+
+<style>
+.form-builder-page .section-header { margin-bottom: 20px; }
+.form-builder-with-preview { display: flex; flex-wrap: nowrap; gap: 24px; align-items: flex-start; width: 100%; }
+.form-builder-column { flex: 1; min-width: 0; }
+.preview-panel { width: 600px; flex-shrink: 0; border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-secondary); overflow: hidden; transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+.preview-panel.collapsed { width: 48px; min-width: 48px; }
+.preview-panel.collapsed .preview-panel-content,
+.preview-panel.collapsed .preview-panel-title { display: none !important; }
+.preview-panel.collapsed .preview-panel-header { justify-content: center; padding: 10px; }
+.preview-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface-primary); border-bottom: 1px solid var(--border-default); }
+.preview-panel-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.preview-panel-content { min-height: 200px; position: relative; }
+.preview-panel-content iframe { width: 100%; height: 100%; border: none; }
+.preview-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; padding: 24px; text-align: center; color: var(--text-muted); font-size: 14px; }
+@media (max-width: 900px) { .form-builder-with-preview { flex-direction: column; } .preview-panel { width: 100% !important; min-width: 0 !important; } .preview-panel.collapsed { width: 48px !important; min-width: 48px !important; margin-left: auto; } }
+</style>
+
+<script>
+(function() {
+  var panel = document.getElementById('previewPanel');
+  var toggle = document.getElementById('previewToggle');
+  var iframe = document.getElementById('previewIframe');
+  var noTemplate = document.getElementById('previewNoTemplate');
+  var templateExists = false;
+
+  function setPreviewState(hasTemplate) {
+    templateExists = hasTemplate;
+    if (hasTemplate) {
+      noTemplate.style.display = 'none';
+      iframe.style.display = 'block';
+      iframe.src = '/template';
+      var content = document.getElementById('previewContent');
+      if (content) content.style.height = '200px';
+    } else {
+      noTemplate.style.display = 'flex';
+      iframe.style.display = 'none';
+      iframe.src = 'about:blank';
+      var content = document.getElementById('previewContent');
+      if (content) content.style.height = '200px';
+    }
+  }
+
+  fetch('/template/exists', { credentials: 'same-origin' })
+    .then(function(r) {
+      if (!r.ok) return { exists: false };
+      return r.json();
+    })
+    .then(function(data) {
+      setPreviewState(!!(data && data.exists));
+    })
+    .catch(function() { setPreviewState(false); });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'preview-resize' && typeof e.data.height === 'number') {
+      var content = document.getElementById('previewContent');
+      if (content) {
+        var h = Math.max(200, Math.min(e.data.height + 24, window.innerHeight * 0.85));
+        content.style.height = h + 'px';
+      }
+    }
+  });
+
+  iframe.addEventListener('load', function() {
+    window._previewReady = templateExists;
+    if (templateExists && iframe.contentWindow && typeof window.updatePreview === 'function') {
+      window.updatePreview();
+    }
+  });
+
+  if (toggle) {
+    toggle.addEventListener('click', function() {
+      panel.classList.toggle('collapsed');
+      toggle.title = panel.classList.contains('collapsed') ? 'Show preview' : 'Hide preview';
+      toggle.textContent = panel.classList.contains('collapsed') ? '▶' : '◀ Hide';
+    });
+  }
+})();
+</script>

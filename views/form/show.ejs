@@ -1,13 +1,16 @@
-<div class="section-header">
-  <div>
-    <a href="/form" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Forms</a>
-    <h1 class="page-title"><%= form.name %></h1>
-    <p class="page-subtitle">Form template details</p>
+<div class="form-builder-page">
+  <div class="section-header">
+    <div>
+      <a href="/form" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Forms</a>
+      <h1 class="page-title"><%= form.name %></h1>
+      <p class="page-subtitle">Form template details</p>
+    </div>
+    <a href="/form/<%= form.id %>/edit" class="btn btn-primary">Edit Template</a>
   </div>
-  <a href="/form/<%= form.id %>/edit" class="btn btn-primary">Edit Template</a>
-</div>
 
-<div class="card">
+  <div class="form-builder-with-preview">
+    <div class="form-builder-column">
+    <div class="card">
   <div class="card-body">
     <div class="form-group">
       <label class="form-label">Template Name</label>
@@ -17,38 +20,70 @@
       <label class="form-label">Fields</label>
       <%
         var fieldList = Array.isArray(form.fields) ? form.fields : [];
-        var typeLabels = { string: 'Short text', number: 'Number', email: 'Email', phone: 'Phone', date: 'Date', boolean: 'Yes or No', textarea: 'Paragraph', options: 'Choose from list' };
+        var typeLabels = { string: 'Short text', number: 'Number', email: 'Email', phone: 'Phone', date: 'Date', textarea: 'Paragraph', options: 'Choose from list', radio: 'Single choice' };
+        function isGroup(it) { return it && Array.isArray(it.fields); }
+        function isField(it) { return it && 'type' in it; }
       %>
       <% if (fieldList.length) { %>
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Field name</th>
-                <th>Type</th>
-                <th>Required</th>
-                <% if (fieldList.some(function(f) { return f.type === 'options'; })) { %><th>Choices</th><% } %>
-              </tr>
-            </thead>
-            <tbody>
-              <% fieldList.forEach(function(f) { %>
-                <tr>
-                  <td><strong><%= f.name %></strong></td>
-                  <td><span class="badge badge-muted"><%= typeLabels[f.type || 'string'] || f.type %></span></td>
-                  <td><%= f.is_required !== false ? 'Yes' : 'No' %></td>
-                  <% if (fieldList.some(function(x) { return x.type === 'options'; })) { %>
-                  <td>
-                    <% if (f.type === 'options') { %>
-                      <%= Array.isArray(f.options) ? f.options.join(', ') : '—' %>
-                      <% if (f.default_option) { %> · Pre-selected: <%= f.default_option %><% } %>
-                    <% } else { %>—<% } %>
-                  </td>
-                  <% } %>
-                </tr>
-              <% }); %>
-            </tbody>
-          </table>
-        </div>
+        <% fieldList.forEach(function(it) { %>
+          <% if (isGroup(it)) { %>
+            <div style="margin-bottom: 20px;">
+              <h4 style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase;"><%= it.name || 'Unnamed group' %></h4>
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Field name</th>
+                      <th>Type</th>
+                      <th>Required</th>
+                      <% if ((it.fields || []).some(function(f) { return f.type === 'options' || f.type === 'radio'; })) { %><th>Choices</th><% } %>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% (it.fields || []).forEach(function(f) { %>
+                      <tr>
+                        <td><strong><%= f.name %></strong></td>
+                        <td><span class="badge badge-muted"><%= typeLabels[f.type || 'string'] || f.type %></span></td>
+                        <td><%= f.is_required !== false ? 'Yes' : 'No' %></td>
+                        <% if ((it.fields || []).some(function(x) { return x.type === 'options' || x.type === 'radio'; })) { %>
+                        <td>
+                          <% if (f.type === 'options' || f.type === 'radio') { %>
+                            <%= Array.isArray(f.options) ? f.options.join(', ') : '—' %>
+                            <% if (f.default_option) { %> · Pre-selected: <%= f.default_option %><% } %>
+                          <% } else { %>—<% } %>
+                        </td>
+                        <% } %>
+                      </tr>
+                    <% }); %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          <% } else { %>
+            <div class="table-wrap" style="margin-bottom: 16px;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Field name</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <% if (it.type === 'options' || it.type === 'radio') { %><th>Choices</th><% } %>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong><%= it.name %></strong></td>
+                    <td><span class="badge badge-muted"><%= typeLabels[it.type || 'string'] || it.type %></span></td>
+                    <td><%= it.is_required !== false ? 'Yes' : 'No' %></td>
+                    <% if (it.type === 'options' || it.type === 'radio') { %>
+                    <td><%= Array.isArray(it.options) ? it.options.join(', ') : '—' %><% if (it.default_option) { %> · Pre-selected: <%= it.default_option %><% } %></td>
+                    <% } %>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        <% }); %>
       <% } else { %>
         <p class="text-muted">No fields defined.</p>
       <% } %>
@@ -59,3 +94,34 @@
     </p>
   </div>
 </div>
+  </div>
+
+  <%- include('../partials/form-live-preview') %>
+</div>
+</div>
+
+<script>
+(function() {
+  var TYPE_TO_HTML = { string: 'text', number: 'number', email: 'email', phone: 'tel', date: 'date', textarea: 'textarea', options: 'checkbox', radio: 'radio' };
+  function addHtmlTypes(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr.map(function(it) {
+      if (it && Array.isArray(it.fields)) {
+        return { id: it.id, name: it.name, order: it.order, fields: addHtmlTypes(it.fields) };
+      }
+      if (it && it.type) {
+        return { id: it.id, name: it.name, type: it.type, htmlType: TYPE_TO_HTML[it.type] || 'text', is_required: it.is_required !== false, options: it.options, default_option: it.default_option };
+      }
+      return it;
+    });
+  }
+  var fieldsData = addHtmlTypes(<%- JSON.stringify(form.fields || []) %>);
+  function updatePreview() {
+    var iframe = document.getElementById('previewIframe');
+    if (!iframe || !iframe.contentWindow || !window._previewReady) return;
+    iframe.contentWindow.postMessage({ fields: fieldsData }, '*');
+  }
+  window.updatePreview = updatePreview;
+  if (window._previewReady) updatePreview();
+})();
+</script>

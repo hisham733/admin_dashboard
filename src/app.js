@@ -69,10 +69,12 @@ const user = require('./routes/user.route');
 const role = require('./routes/role.route');
 const settings = require('./routes/settings.route');
 const profile = require('./routes/profile.route');
+const template = require('./routes/template.route');
 
 // Body parser (built-in)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(methodOverride(function (req, res) {
   if (req.body && typeof req.body === 'object' && '_method' in req.body) {
     var method = req.body._method;
@@ -89,6 +91,7 @@ app.use('/user', user);
 app.use('/role', role);
 app.use('/settings', settings);
 app.use('/profile', profile);
+app.use('/template', template);
 app.use('/form', form);
 
 //error handler middleware 

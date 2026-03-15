@@ -172,6 +172,38 @@ body {
   width: 100%;
 }
 
+.content-wrap--form-builder {
+  max-width: 1400px;
+}
+
+.form-builder-with-preview {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.form-builder-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-builder-with-preview .preview-panel {
+  flex-shrink: 0;
+  width: 600px;
+}
+
+@media (max-width: 900px) {
+  .form-builder-with-preview {
+    flex-direction: column !important;
+  }
+  .form-builder-with-preview .preview-panel {
+    width: 100% !important;
+  }
+}
+
 /* ─── Header Component ─── */
 .top-header {
   background: var(--surface-primary);

@@ -54,7 +54,14 @@
       <tbody>
         <% if (typeof forms !== 'undefined' && forms && forms.length) { %>
           <% forms.forEach(function(f) { %>
-            <% var fieldList = Array.isArray(f.fields) ? f.fields : []; %>
+            <% 
+              var fieldList = Array.isArray(f.fields) ? f.fields : [];
+              var _fieldCount = 0;
+              fieldList.forEach(function(it) {
+                if (it && Array.isArray(it.fields)) _fieldCount += (it.fields || []).length;
+                else if (it && 'type' in it) _fieldCount += 1;
+              });
+            %>
             <tr>
               <td><strong><%= f.name %></strong></td>
               <td>
@@ -64,7 +71,7 @@
                   <span class="badge badge-muted">Inactive</span>
                 <% } %>
               </td>
-              <td><span class="badge badge-muted"><%= fieldList.length %> field<%= fieldList.length !== 1 ? 's' : '' %></span></td>
+              <td><span class="badge badge-muted"><%= _fieldCount %> field<%= _fieldCount !== 1 ? 's' : '' %></span></td>
               <% if (_canManageAll) { %>
                 <td style="font-size:13px; color: var(--text-muted);">
                   <%= (f.createdBy && f.createdBy.name) ? f.createdBy.name : '—' %>

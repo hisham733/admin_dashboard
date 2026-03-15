@@ -61,6 +61,13 @@ model FormTemplate {
   @@map("form_templates")
 }
 
+model Template {
+  id   Int     @id @default(autoincrement())
+  html String? @db.LongText
+
+  @@map("templates")
+}
+
 model Order {
   id          Int       @id @default(autoincrement())
   order_no    String?   @db.VarChar(50)

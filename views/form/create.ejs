@@ -1,16 +1,19 @@
-<div class="section-header">
-  <div>
-    <a href="/form" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Forms</a>
-    <h1 class="page-title">Create Form Template</h1>
-    <p class="page-subtitle">Design your custom form template with fields and types.</p>
+<div class="form-builder-page">
+  <div class="section-header">
+    <div>
+      <a href="/form" class="btn btn-ghost btn-sm" style="margin-bottom: 8px;">← Back to Forms</a>
+      <h1 class="page-title">Create Form Template</h1>
+      <p class="page-subtitle">Design your custom form template with fields and groups.</p>
+    </div>
   </div>
-</div>
 
-<% if (typeof error !== 'undefined' && error) { %>
-  <div class="alert-inline alert-error"><%= error %></div>
-<% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert-inline alert-error"><%= error %></div>
+  <% } %>
 
-<div class="card form-builder-card">
+  <div class="form-builder-with-preview">
+    <div class="form-builder-column">
+    <div class="card form-builder-card">
   <div class="card-body">
     <div class="form-builder-section">
       <label class="form-builder-label">Template Info</label>
@@ -21,16 +24,21 @@
     </div>
 
     <div class="form-builder-section">
-      <label class="form-builder-label">Fields <span class="badge badge-muted" id="fieldCount">0</span></label>
+      <label class="form-builder-label">Fields & Groups <span class="badge badge-muted" id="fieldCount">0</span></label>
       <div class="alert-inline alert-error" id="alertBox" style="display:none;"></div>
       <div class="empty-state form-builder-empty" id="emptyState">
         <div class="empty-state-icon">📋</div>
-        <p class="empty-state-text">No fields yet — click <strong>+ Add Field</strong> to start building</p>
+        <p class="empty-state-text">No fields yet — add a <strong>Group</strong> or <strong>Field</strong> to start</p>
       </div>
       <div class="form-builder-fields" id="fieldsList"></div>
-      <button type="button" class="btn btn-ghost form-builder-add" onclick="addField()">
-        <span class="form-builder-add-icon">+</span> Add Field
-      </button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-ghost form-builder-add" onclick="addGroup()">
+          <span class="form-builder-add-icon">+</span> Add Group
+        </button>
+        <button type="button" class="btn btn-ghost form-builder-add" onclick="addField()">
+          <span class="form-builder-add-icon">+</span> Add Field
+        </button>
+      </div>
     </div>
 
     <div class="form-builder-submit">
@@ -45,17 +53,27 @@
     </div>
   </div>
 </div>
+  </div>
+
+  <%- include('../partials/form-live-preview') %>
+</div>
+</div>
 
 <style>
 .form-builder-card .card-body { max-width: 900px; }
 .form-builder-section { margin-bottom: 28px; }
 .form-builder-label { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; color: var(--text-muted); text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 .form-builder-fields { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
-.form-builder-add { width: 100%; padding: 14px; border: 1px dashed var(--border-default); border-radius: var(--radius-md); color: var(--accent); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+.form-builder-add { padding: 12px 20px; border: 1px dashed var(--border-default); border-radius: var(--radius-md); color: var(--accent); font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
 .form-builder-add:hover { background: var(--accent-muted); border-color: var(--accent); border-style: solid; }
-.form-builder-add-icon { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+.form-builder-add-icon { width: 20px; height: 20px; border-radius: 6px; background: var(--accent); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
 .form-builder-empty { padding: 24px; margin-bottom: 12px; display: none; }
 .form-builder-empty.show { display: block; }
+.form-builder-group { border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; background: var(--surface-secondary); }
+.form-builder-group-header { padding: 12px 16px; background: var(--surface-primary); border-bottom: 1px solid var(--border-default); display: flex; align-items: center; gap: 12px; }
+.form-builder-group-header input { flex: 1; }
+.form-builder-group-fields { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.form-builder-group-add { margin-top: 8px; }
 .form-builder-field-row { display: grid; grid-template-columns: 1fr 160px 140px 40px; gap: 12px; align-items: end; padding: 16px; background: var(--surface-secondary); border: 1px solid var(--border-default); border-radius: var(--radius-md); border-left: 3px solid var(--accent); }
 .form-builder-field-row.form-builder-field-options { grid-template-columns: 1fr; }
 .form-builder-field-row.form-builder-field-options .field-main { display: grid; grid-template-columns: 1fr 160px 140px 40px; gap: 12px; align-items: end; }
@@ -74,8 +92,8 @@
 .form-builder-field-row .finput, .form-builder-field-row .fselect, .form-builder-field-row textarea.finput { width: 100%; padding: 8px 12px; font-size: 13px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--surface-primary); color: var(--text-primary); }
 .form-builder-field-row textarea.finput { resize: vertical; min-height: 50px; }
 .form-builder-field-row .radio-group { display: flex; gap: 8px; }
-.form-builder-field-row .radio-opt { flex: 1; }
-.form-builder-field-row .radio-opt input { position: absolute; opacity: 0; }
+.form-builder-field-row .radio-opt { flex: 1; position: relative; }
+.form-builder-field-row .radio-opt input { position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; margin: 0; cursor: pointer; }
 .form-builder-field-row .radio-opt label { display: flex; align-items: center; justify-content: center; padding: 8px; background: var(--surface-primary); border: 1px solid var(--border-default); border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; }
 .form-builder-field-row .radio-opt input:checked + label { border-color: var(--accent); background: var(--accent-muted); color: var(--accent); }
 .form-builder-field-row .del-btn { width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--error-muted); border: 1px solid var(--error); color: var(--error); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -83,101 +101,245 @@
 .form-builder-submit { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-top: 20px; border-top: 1px solid var(--border-default); margin-top: 8px; }
 .form-builder-submit-info { font-size: 13px; color: var(--text-muted); }
 .form-builder-submit-info strong { color: var(--text-primary); display: block; margin-bottom: 2px; }
+
+/* Live preview panel */
+.form-builder-with-preview { display: flex; flex-wrap: nowrap; gap: 24px; align-items: flex-start; width: 100%; }
+.form-builder-column { flex: 1; min-width: 0; }
+.preview-panel { width: 380px; flex-shrink: 0; border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-secondary); overflow: hidden; }
+.preview-panel.collapsed { width: 48px; }
+.preview-panel.collapsed .preview-panel-content,
+.preview-panel.collapsed .preview-panel-title { display: none !important; }
+.preview-panel.collapsed .preview-panel-header { justify-content: center; }
+.preview-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface-primary); border-bottom: 1px solid var(--border-default); }
+.preview-panel-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+.preview-panel-content { height: 480px; position: relative; }
+.preview-panel-content iframe { width: 100%; height: 100%; border: none; }
+.preview-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; padding: 24px; text-align: center; color: var(--text-muted); font-size: 14px; }
+@media (max-width: 900px) { .form-builder-with-preview { flex-direction: column; } .preview-panel { width: 100%; } .preview-panel.collapsed { width: 48px; } }
 </style>
 
 <script>
 var fields = [];
 var idCounter = 0;
+var TYPE_TO_HTML = { string: 'text', number: 'number', email: 'email', phone: 'tel', date: 'date', textarea: 'textarea', options: 'checkbox', radio: 'radio' };
 var TYPES = [
   { value: 'string', label: 'Short text' },
   { value: 'number', label: 'Number' },
   { value: 'email', label: 'Email' },
   { value: 'phone', label: 'Phone' },
   { value: 'date', label: 'Date' },
-  { value: 'boolean', label: 'Yes or No' },
   { value: 'textarea', label: 'Paragraph' },
-  { value: 'options', label: 'Choose from list' }
+  { value: 'options', label: 'Choose from list' },
+  { value: 'radio', label: 'Single choice' }
 ];
-function addField() {
+function isGroup(it) { return it && Array.isArray(it.fields); }
+function isField(it) { return it && 'type' in it; }
+function totalCount() {
+  var n = 0;
+  fields.forEach(function(it) {
+    if (isGroup(it)) n += (it.fields || []).length;
+    else n += 1;
+  });
+  return n;
+}
+function addGroup() {
+  var id = 'grp_' + (++idCounter);
+  fields.push({ id: id, name: '', order: fields.length, fields: [] });
+  renderFields();
+  setTimeout(function() {
+    var el = document.getElementById('group-' + id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+}
+function addField(grpId) {
   var id = ++idCounter;
-  fields.push({ id: id });
+  if (grpId) {
+    var g = fields.find(function(x) { return x.id === grpId; });
+    if (g) {
+      g.fields = g.fields || [];
+      g.fields.push({ id: id, name: '', type: 'string', is_required: true });
+    }
+  } else {
+    fields.push({ id: id, name: '', type: 'string', is_required: true });
+  }
   renderFields();
   setTimeout(function() {
     var el = document.getElementById('field-' + id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, 50);
 }
-function removeField(id) {
-  fields = fields.filter(function(f) { return f.id !== id; });
+function removeGroup(id) {
+  fields = fields.filter(function(f) { return !isGroup(f) || f.id !== id; });
   renderFields();
 }
-function updateField(id, key, value) {
-  var f = fields.find(function(x) { return x.id === id; });
+function removeField(id, grpId) {
+  if (grpId) {
+    var g = fields.find(function(x) { return x.id === grpId; });
+    if (g && g.fields) g.fields = g.fields.filter(function(f) { return f.id !== id; });
+  } else {
+    fields = fields.filter(function(f) { return !isField(f) || f.id !== id; });
+  }
+  renderFields();
+}
+function updateGroup(id, key, value) {
+  var g = fields.find(function(x) { return isGroup(x) && x.id === id; });
+  if (g) g[key] = value;
+  updatePreview();
+}
+function updateField(id, key, value, grpId) {
+  var f;
+  if (grpId) {
+    var g = fields.find(function(x) { return x.id === grpId; });
+    f = g && g.fields ? g.fields.find(function(x) { return x.id === id; }) : null;
+  } else {
+    f = fields.find(function(x) { return isField(x) && x.id === id; });
+  }
   if (f) f[key] = value;
+  updatePreview();
+}
+function renderField(f, grpId) {
+  var isOpt = f.type === 'options' || f.type === 'radio';
+  var optsList = [];
+  if (isOpt) {
+    var opts = Array.isArray(f.options) ? f.options : [];
+    opts.forEach(function(opt, idx) {
+      var val = (typeof opt === 'string' ? opt : (opt.value || '')).replace(/"/g, '&quot;');
+      optsList.push('<div class="opts-row"><input class="finput opts-item" type="text" placeholder="e.g. A4, Small, Blue" value="' + val + '" oninput="updatePreview()"><button type="button" class="opts-remove" onclick="removeOption(' + f.id + ',' + idx + ',' + (grpId ? "'" + String(grpId).replace(/'/g, "\\'") + "'" : 'null') + ')">✕</button></div>');
+    });
+  }
+  var typeOpts = TYPES.map(function(t) { return '<option value="' + t.value + '"' + ((f.type || 'string') === t.value ? ' selected' : '') + '>' + t.label + '</option>'; }).join('');
+  var addOptArg = grpId ? "'" + String(grpId).replace(/'/g, "\\'") + "'" : 'null';
+  var optsExtra = isOpt ? '<div class="field-options-extra">' +
+    '<label class="flabel">Choices</label>' +
+    '<div class="opts-list" id="opts-list-' + f.id + '">' + optsList.join('') + '</div>' +
+    '<button type="button" class="btn btn-ghost btn-sm opts-add" onclick="addOption(' + f.id + ',' + addOptArg + ')">+ Add choice</button>' +
+    '<div class="fg" style="margin-top:12px;"><label class="flabel">Pre-selected (optional)</label><select class="fselect opts-default" data-id="' + f.id + '" onchange="updatePreview()"><option value="">None</option>' +
+    (opts.filter(function(o) { var v = typeof o === 'string' ? o : (o.value || ''); return v; }).map(function(o) { var v = typeof o === 'string' ? o : (o.value || ''); return '<option value="' + v.replace(/"/g, '&quot;') + '"' + (f.default_option === v ? ' selected' : '') + '>' + v.replace(/</g, '&lt;') + '</option>'; }).join('')) +
+    '</select></div></div>' : '';
+  var grpIdJs = grpId ? '\'' + String(grpId).replace(/'/g, "\\'") + '\'' : null;
+  var onchange = grpId ? 'updateField(' + f.id + ',\'type\',this.value,' + grpIdJs + '); renderFields();' : 'updateField(' + f.id + ',\'type\',this.value); renderFields();';
+  return '<div class="form-builder-field-row' + (isOpt ? ' form-builder-field-options' : '') + '" id="field-' + f.id + '">' +
+    '<div class="field-main">' +
+    '<div class="fg"><label class="flabel">Field name</label><input class="finput" type="text" placeholder="e.g. client_name" value="' + (f.name || '').replace(/"/g, '&quot;') + '" oninput="updateField(' + f.id + ',\'name\',this.value' + (grpId ? ',' + grpIdJs : '') + ')"></div>' +
+    '<div class="fg"><label class="flabel">Required</label><div class="radio-group">' +
+    '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" value="true" onchange="updateField(' + f.id + ',\'is_required\',true' + (grpId ? ',' + grpIdJs : '') + ')" ' + (f.is_required !== false ? 'checked' : '') + '><label>Yes</label></div>' +
+    '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" value="false" onchange="updateField(' + f.id + ',\'is_required\',false' + (grpId ? ',' + grpIdJs : '') + ')" ' + (f.is_required === false ? 'checked' : '') + '><label>No</label></div></div></div>' +
+    '<div class="fg"><label class="flabel">Field type</label><select class="fselect" onchange="' + onchange + '">' + typeOpts + '</select></div>' +
+    '<button type="button" class="del-btn" onclick="removeField(' + f.id + ',' + (grpId ? grpIdJs : 'null') + ')" title="Remove">✕</button>' +
+    '</div>' + optsExtra + '</div>';
+}
+function buildFieldSchemaForPreview() {
+  collectFromDom();
+  return fields.map(function(it) {
+    if (isGroup(it)) {
+      return {
+        id: it.id,
+        name: it.name,
+        order: it.order,
+        fields: (it.fields || []).map(function(f) {
+          var base = { id: f.id, name: f.name, type: f.type || 'string', htmlType: TYPE_TO_HTML[f.type || 'string'] || 'text', is_required: f.is_required !== false };
+          if (f.type === 'options' || f.type === 'radio') {
+            base.options = Array.isArray(f.options) ? f.options.filter(Boolean) : [];
+            base.default_option = (f.default_option && String(f.default_option).trim()) || null;
+          }
+          return base;
+        })
+      };
+    } else {
+      var base = { id: it.id, name: it.name, type: it.type || 'string', htmlType: TYPE_TO_HTML[it.type || 'string'] || 'text', is_required: it.is_required !== false };
+      if (it.type === 'options' || it.type === 'radio') {
+        base.options = Array.isArray(it.options) ? it.options.filter(Boolean) : [];
+        base.default_option = (it.default_option && String(it.default_option).trim()) || null;
+      }
+      return base;
+    }
+  });
+}
+function updatePreview() {
+  var iframe = document.getElementById('previewIframe');
+  if (!iframe || !iframe.contentWindow || !window._previewReady) return;
+  var schema = buildFieldSchemaForPreview();
+  iframe.contentWindow.postMessage({ fields: schema }, '*');
 }
 function renderFields() {
   var list = document.getElementById('fieldsList');
   var empty = document.getElementById('emptyState');
   var count = document.getElementById('fieldCount');
-  count.textContent = fields.length;
+  count.textContent = totalCount();
   if (fields.length === 0) {
     list.innerHTML = '';
     empty.classList.add('show');
     return;
   }
   empty.classList.remove('show');
-  var typeOpts = TYPES.map(function(t) { return '<option value="' + t.value + '">' + t.label + '</option>'; }).join('');
-  list.innerHTML = fields.map(function(f, i) {
-    var isOpt = f.type === 'options';
-    var optsList = [];
-    if (isOpt && Array.isArray(f.options)) {
-      f.options.forEach(function(opt, idx) {
-        var val = (typeof opt === 'string' ? opt : (opt.value || '')).replace(/"/g, '&quot;');
-        optsList.push('<div class="opts-row" data-fid="' + f.id + '" data-oidx="' + idx + '"><input class="finput opts-item" type="text" placeholder="e.g. A4, Small, Blue" value="' + val + '"><button type="button" class="opts-remove" onclick="removeOption(' + f.id + ',' + idx + ')">✕</button></div>');
-      });
+  var html = '';
+  fields.forEach(function(it, idx) {
+    if (isGroup(it)) {
+      it.order = idx;
+      var groupFields = (it.fields || []).map(function(f) { return renderField(f, it.id); }).join('');
+      html += '<div class="form-builder-group" id="group-' + it.id + '">' +
+        '<div class="form-builder-group-header">' +
+        '<input type="text" class="form-input" placeholder="Group name (e.g. Customer Information)" value="' + (it.name || '').replace(/"/g, '&quot;') + '" oninput="updateGroup(\'' + (it.id + '').replace(/'/g, "\\'") + '\',\'name\',this.value)">' +
+        '<button type="button" class="btn btn-ghost btn-sm" onclick="removeGroup(\'' + (it.id + '').replace(/'/g, "\\'") + '\')" title="Remove group">✕</button>' +
+        '</div>' +
+        '<div class="form-builder-group-fields">' + groupFields +
+        '<button type="button" class="btn btn-ghost btn-sm form-builder-group-add" onclick="addField(\'' + (it.id + '').replace(/'/g, "\\'") + '\')">+ Add field to group</button>' +
+        '</div></div>';
+    } else {
+      html += renderField(it, null);
     }
-    var optsExtra = isOpt ? '<div class="field-options-extra" id="opts-' + f.id + '">' +
-      '<label class="flabel">Choices</label>' +
-      '<div class="opts-list" id="opts-list-' + f.id + '">' + optsList.join('') + '</div>' +
-      '<button type="button" class="btn btn-ghost btn-sm opts-add" onclick="addOption(' + f.id + ')">+ Add choice</button>' +
-      '<div class="fg" style="margin-top:12px;"><label class="flabel">Pre-selected (optional)</label><select class="fselect opts-default" data-id="' + f.id + '"><option value="">None</option>' +
-      (Array.isArray(f.options) ? f.options.filter(function(o) { var v = typeof o === 'string' ? o : (o.value || ''); return v; }).map(function(o) { var v = typeof o === 'string' ? o : (o.value || ''); return '<option value="' + v.replace(/"/g, '&quot;') + '"' + (f.default_option === v ? ' selected' : '') + '>' + v.replace(/</g, '&lt;') + '</option>'; }).join('') : '') +
-      '</select></div></div>' : '';
-    return '<div class="form-builder-field-row' + (isOpt ? ' form-builder-field-options' : '') + '" id="field-' + f.id + '">' +
-      '<div class="field-main">' +
-      '<div class="fg"><label class="flabel">Field name</label><input class="finput" type="text" placeholder="e.g. client_name, paper_size" oninput="updateField(' + f.id + ',\'name\',this.value)" value="' + (f.name || '').replace(/"/g, '&quot;') + '"></div>' +
-      '<div class="fg"><label class="flabel">Required</label><div class="radio-group">' +
-      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_yes_' + f.id + '" value="true" onchange="updateField(' + f.id + ',\'is_required\',true)" ' + (f.is_required !== false ? 'checked' : '') + '><label for="req_yes_' + f.id + '">Yes</label></div>' +
-      '<div class="radio-opt"><input type="radio" name="req_' + f.id + '" id="req_no_' + f.id + '" value="false" onchange="updateField(' + f.id + ',\'is_required\',false)" ' + (f.is_required === false ? 'checked' : '') + '><label for="req_no_' + f.id + '">No</label></div></div></div>' +
-      '<div class="fg"><label class="flabel">Field type</label><select class="fselect" onchange="updateField(' + f.id + ',\'type\',this.value); renderFields();">' + typeOpts + '</select></div>' +
-      '<button type="button" class="del-btn" onclick="removeField(' + f.id + ')" title="Remove">✕</button>' +
-      '</div>' + optsExtra + '</div>';
-  }).join('');
-  fields.forEach(function(f) {
-    var nameEl = document.querySelector('#field-' + f.id + ' .finput:not(.opts-item)');
-    var typeEl = document.querySelector('#field-' + f.id + ' .fselect:not(.opts-default)');
-    if (f.name && nameEl) nameEl.value = f.name;
-    if (f.type && typeEl) typeEl.value = f.type;
-    if (f.is_required === false) { var r = document.getElementById('req_no_' + f.id); if (r) r.checked = true; }
   });
+  list.innerHTML = html;
+  fields.forEach(function(it) {
+    if (isGroup(it)) {
+      (it.fields || []).forEach(function(f) {
+        var nameEl = document.querySelector('#field-' + f.id + ' .finput:not(.opts-item)');
+        var typeEl = document.querySelector('#field-' + f.id + ' .fselect:not(.opts-default)');
+        if (nameEl) nameEl.value = f.name || '';
+        if (typeEl) typeEl.value = f.type || 'string';
+        var r = document.querySelector('#field-' + f.id + ' input[name="req_' + f.id + '"][value="false"]');
+        if (f.is_required === false && r) r.checked = true;
+      });
+    } else {
+      var nameEl = document.querySelector('#field-' + it.id + ' .finput:not(.opts-item)');
+      var typeEl = document.querySelector('#field-' + it.id + ' .fselect:not(.opts-default)');
+      if (nameEl) nameEl.value = it.name || '';
+      if (typeEl) typeEl.value = it.type || 'string';
+      var r = document.querySelector('#field-' + it.id + ' input[name="req_' + it.id + '"][value="false"]');
+      if (it.is_required === false && r) r.checked = true;
+    }
+  });
+  updatePreview();
 }
-function collectOptionsFromField(fid) {
+function collectOptionsFromField(fid, grpId) {
   var items = document.querySelectorAll('#field-' + fid + ' .opts-item');
   var arr = [];
   items.forEach(function(inp) { arr.push(inp.value.trim()); });
   return arr;
 }
-function addOption(fid) {
-  var f = fields.find(function(x) { return x.id === fid; });
+function addOption(fid, grpId) {
+  var f;
+  if (grpId) {
+    var g = fields.find(function(x) { return x.id === grpId; });
+    f = g && g.fields ? g.fields.find(function(x) { return x.id === fid; }) : null;
+  } else {
+    f = fields.find(function(x) { return isField(x) && x.id === fid; });
+  }
   if (!f) return;
-  f.options = collectOptionsFromField(fid);
+  f.options = collectOptionsFromField(fid, grpId);
   f.options.push('');
   renderFields();
 }
-function removeOption(fid, idx) {
-  var f = fields.find(function(x) { return x.id === fid; });
+function removeOption(fid, idx, grpId) {
+  var f;
+  if (grpId) {
+    var g = fields.find(function(x) { return x.id === grpId; });
+    f = g && g.fields ? g.fields.find(function(x) { return x.id === fid; }) : null;
+  } else {
+    f = fields.find(function(x) { return isField(x) && x.id === fid; });
+  }
   if (!f) return;
-  f.options = collectOptionsFromField(fid);
+  f.options = collectOptionsFromField(fid, grpId);
   f.options.splice(idx, 1);
   renderFields();
 }
@@ -189,58 +351,113 @@ function showAlert(msg) {
 }
 function clearAll() {
   if (fields.length === 0) return;
-  window.showConfirm({ title: 'Clear all fields?', message: 'All fields will be removed and the template name will be cleared.', okLabel: 'Clear', okClass: 'btn-danger', icon: '🗑️' }, function() {
+  window.showConfirm({ title: 'Clear all?', message: 'All groups and fields will be removed.', okLabel: 'Clear', okClass: 'btn-danger', icon: '🗑️' }, function() {
     fields = [];
     idCounter = 0;
     document.getElementById('templateName').value = '';
     renderFields();
   });
 }
-function submitTemplate() {
-  fields.forEach(function(f) {
-    var nameEl = document.querySelector('#field-' + f.id + ' .finput:not(.opts-item)');
-    var typeEl = document.querySelector('#field-' + f.id + ' .fselect:not(.opts-default)');
-    var reqEl = document.querySelector('input[name="req_' + f.id + '"]:checked');
-    if (nameEl) f.name = nameEl.value.trim();
-    if (typeEl) f.type = typeEl.value;
-    if (reqEl) f.is_required = reqEl.value === 'true';
-    if (f.type === 'options') {
-      var items = document.querySelectorAll('#field-' + f.id + ' .opts-item');
-      f.options = [];
-      items.forEach(function(inp) { var v = inp.value.trim(); if (v) f.options.push(v); });
-      var defEl = document.querySelector('#field-' + f.id + ' .opts-default');
-      f.default_option = (defEl && defEl.value) ? defEl.value : null;
+function collectFromDom() {
+  fields.forEach(function(it) {
+    if (isGroup(it)) {
+      var groupEl = document.querySelector('#group-' + it.id + ' .form-builder-group-header input');
+      if (groupEl) it.name = groupEl.value.trim();
+      (it.fields || []).forEach(function(f) {
+        var nameEl = document.querySelector('#field-' + f.id + ' .finput:not(.opts-item)');
+        var typeEl = document.querySelector('#field-' + f.id + ' .fselect:not(.opts-default)');
+        var reqEl = document.querySelector('#field-' + f.id + ' input[name="req_' + f.id + '"]:checked');
+        if (nameEl) f.name = nameEl.value.trim();
+        if (typeEl) f.type = typeEl.value;
+        if (reqEl) f.is_required = reqEl.value === 'true';
+        if (f.type === 'options' || f.type === 'radio') {
+          var items = document.querySelectorAll('#field-' + f.id + ' .opts-item');
+          if (items.length > 0) {
+            f.options = [];
+            items.forEach(function(inp) { f.options.push(inp.value.trim()); });
+          }
+          var defEl = document.querySelector('#field-' + f.id + ' .opts-default');
+          f.default_option = (defEl && defEl.value) ? defEl.value : null;
+        }
+      });
+    } else {
+      var nameEl = document.querySelector('#field-' + it.id + ' .finput:not(.opts-item)');
+      var typeEl = document.querySelector('#field-' + it.id + ' .fselect:not(.opts-default)');
+      var reqEl = document.querySelector('#field-' + it.id + ' input[name="req_' + it.id + '"]:checked');
+      if (nameEl) it.name = nameEl.value.trim();
+      if (typeEl) it.type = typeEl.value;
+      if (reqEl) it.is_required = reqEl.value === 'true';
+      if (it.type === 'options' || it.type === 'radio') {
+        var items = document.querySelectorAll('#field-' + it.id + ' .opts-item');
+        if (items.length > 0) {
+          it.options = [];
+          items.forEach(function(inp) { it.options.push(inp.value.trim()); });
+        }
+        var defEl = document.querySelector('#field-' + it.id + ' .opts-default');
+        it.default_option = (defEl && defEl.value) ? defEl.value : null;
+      }
     }
   });
-  if (fields.length === 0) { showAlert('Add at least one field before saving.'); return; }
-  if (fields.some(function(f) { return !f.name; })) { showAlert('All fields must have a name.'); return; }
-  if (fields.some(function(f) { return f.type === 'options' && (!f.options || f.options.length === 0); })) {
-    showAlert('Choose from list fields need at least one choice.'); return;
-  }
-  if (fields.some(function(f) {
-    if (f.type !== 'options' || !f.default_option) return false;
-    return f.options.indexOf(f.default_option) === -1;
-  })) {
-    showAlert('Pre-selected must be one of the choices above.'); return;
-  }
-  var names = fields.map(function(f) { return f.name; });
-  if (names.some(function(n, i) { return names.indexOf(n) !== i; })) { showAlert('Field names must be unique.'); return; }
-  var templateName = document.getElementById('templateName').value.trim();
-  var payload = {
-    template_name: templateName || null,
-    fields: fields.map(function(f) {
-      var base = { name: f.name, is_required: f.is_required !== false, type: f.type || 'string' };
-      if (f.type === 'options') {
-        base.options = Array.isArray(f.options) ? f.options.filter(Boolean) : [];
-        base.default_option = (f.default_option && String(f.default_option).trim()) || null;
+}
+function buildPayload() {
+  collectFromDom();
+  return fields.map(function(it) {
+    if (isGroup(it)) {
+      return {
+        id: it.id,
+        name: it.name,
+        order: it.order,
+        fields: (it.fields || []).map(function(f) {
+          var base = { id: f.id, name: f.name, type: f.type || 'string', is_required: f.is_required !== false };
+          if (f.type === 'options' || f.type === 'radio') {
+            base.options = Array.isArray(f.options) ? f.options.filter(Boolean) : [];
+            base.default_option = (f.default_option && String(f.default_option).trim()) || null;
+          }
+          return base;
+        })
+      };
+    } else {
+      var base = { id: it.id, name: it.name, type: it.type || 'string', is_required: it.is_required !== false };
+      if (it.type === 'options' || it.type === 'radio') {
+        base.options = Array.isArray(it.options) ? it.options.filter(Boolean) : [];
+        base.default_option = (it.default_option && String(it.default_option).trim()) || null;
       }
       return base;
-    })
-  };
+    }
+  });
+}
+function submitTemplate() {
+  var payload = buildPayload();
+  if (payload.length === 0) { showAlert('Add at least one field or group before saving.'); return; }
+  function walk(items, fn) {
+    items.forEach(function(it) {
+      if (isGroup(it)) walk(it.fields || [], fn);
+      else fn(it);
+    });
+  }
+  var allFields = [];
+  payload.forEach(function(it) {
+    if (isGroup(it)) (it.fields || []).forEach(function(f) { allFields.push(f); });
+    else allFields.push(it);
+  });
+  if (allFields.some(function(f) { return !f.name; })) { showAlert('All fields must have a name.'); return; }
+  if (allFields.some(function(f) { return (f.type === 'options' || f.type === 'radio') && (!f.options || f.options.length === 0); })) {
+    showAlert('Choose from list / Single choice fields need at least one choice.'); return;
+  }
+  if (allFields.some(function(f) {
+    if ((f.type !== 'options' && f.type !== 'radio') || !f.default_option) return false;
+    return f.options.indexOf(f.default_option) === -1;
+  })) { showAlert('Pre-selected must be one of the choices above.'); return; }
+  var names = allFields.map(function(f) { return f.name; });
+  if (names.some(function(n, i) { return names.indexOf(n) !== i; })) { showAlert('Field names must be unique.'); return; }
+  if (payload.some(function(it) { return isGroup(it) && !(it.name && it.name.trim()); })) {
+    showAlert('All groups must have a name.'); return;
+  }
+  var templateName = document.getElementById('templateName').value.trim();
   fetch('/form', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify({ template_name: templateName || null, fields: payload })
   })
   .then(function(res) {
     if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || 'Server error'); }).catch(function() { throw new Error('Server error ' + res.status); });

@@ -46,7 +46,7 @@
     <div class="main-wrapper" id="mainWrapper">
       <%- include('../partials/header') %>
       <main class="main-content">
-        <div class="content-wrap">
+        <div class="content-wrap<%= typeof contentPartial === 'string' && (contentPartial === 'form/create' || contentPartial === 'form/edit' || contentPartial === 'form/show') ? ' content-wrap--form-builder' : '' %>">
         <% if (typeof contentPartial !== 'undefined') { %>
           <%- include('../' + contentPartial, typeof contentData !== 'undefined' ? contentData : {}) %>
         <% } else if (typeof body !== 'undefined') { %>
