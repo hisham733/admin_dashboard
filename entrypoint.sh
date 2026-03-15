@@ -11,7 +11,7 @@ npx prisma generate
 
 # 3. Apply migrations
 echo "Applying Prisma migrations..."
-npx prisma migrate deploy
+npx prisma db  push
 
 # 4. Run seeding
 echo "Running seed script..."
@@ -19,4 +19,4 @@ npm run start-seed
 
 # 5. Start the server
 echo "Starting application..."
-exec npm run start
+exec npm run dev

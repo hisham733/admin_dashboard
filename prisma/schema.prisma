@@ -69,21 +69,10 @@ model Template {
 }
 
 model Order {
-  id          Int       @id @default(autoincrement())
-  order_no    String?   @db.VarChar(50)
-  client_name String?   @db.VarChar(100)
-  phone       String?   @db.VarChar(50)
-  service     String?   @db.VarChar(100)
-  product     String?   @db.VarChar(100)
-  quantity    String?   @db.VarChar(50)
-  paper       String?   @db.VarChar(100)
-  finishing   String?   @db.VarChar(100)
-  deadline    String?   @db.VarChar(100)
-  delivery    String?   @db.VarChar(100)
-  notes       String?   @db.Text
-  pdf_link    String?   @db.Text
-  status      String?   @db.VarChar(50)
-  created_at  DateTime? @default(now())
+  id         Int       @id @default(autoincrement())
+  fields     Json?
+  pdf_url    String?   @db.Text
+  created_at DateTime? @default(now())
 
   @@map("orders")
 }
