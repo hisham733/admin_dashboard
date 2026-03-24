@@ -463,8 +463,8 @@ function submitTemplate() {
     if (!res.ok) return res.json().then(function(e) { throw new Error(e.message || 'Server error'); }).catch(function() { throw new Error('Server error ' + res.status); });
     return res.json();
   })
-  .then(function(data) {
-    window.location.href = '/form/' + (data.id || data);
+  .then(function() {
+    window.location.href = '/form?success=' + encodeURIComponent('Form template created successfully');
   })
   .catch(function(err) {
     showAlert(err.message || 'Failed to save');

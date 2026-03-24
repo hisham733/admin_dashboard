@@ -86,7 +86,9 @@ async function updateRole(req, res) {
 
   try {
     await roleService.updateRole(id, name, ids);
-    res.redirect('/role?success=' + encodeURIComponent('Role updated successfully'));
+    res.redirect(
+      `/role/${id}/edit?success=${encodeURIComponent('Role updated successfully')}`
+    );
   } catch (err) {
     const role = await roleService.getRole(id);
     const permissions = await roleService.getAllPermissions();

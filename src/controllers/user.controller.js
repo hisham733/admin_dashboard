@@ -1,6 +1,6 @@
 const userService = require('../services/user.service');
 const roleService = require('../services/role.service');
-const { can } = require('../utilities');
+const { can, redirectToList, redirectToListSuccess } = require('../utilities');
 const prisma = require('../configs/prisma');
 
 async function getUsers(req, res) {
@@ -26,7 +26,7 @@ async function editUser(req, res) {
   const user = await userService.getUser(id);
 
   if (!user) {
-    return res.redirect('/user');
+    return redirectToList(res, 'user');
   }
 
   const { items: roles } = await roleService.getRoles({ perPage: 100 }, true);
@@ -46,7 +46,7 @@ async function getUser(req, res) {
   const user = await userService.getUser(id);
 
   if (!user) {
-    return res.redirect('/user');
+    return redirectToList(res, 'user');
   }
 
   const roles = await roleService.getRoles({ perPage: 100 });
@@ -86,7 +86,7 @@ async function storeUser(req, res) {
     roleId
   );
 
-  res.redirect(`/user/${user.id}?success=${encodeURIComponent('User created successfully')}`);
+  redirectToListSuccess(res, 'user', 'User created successfully');
 }
 
 async function updateUser(req, res) {
@@ -96,7 +96,7 @@ async function updateUser(req, res) {
 
   const { name, email, password, confirmPassword, roleId } = req.body;
 
-  const user = await userService.updateUser(
+  await userService.updateUser(
     id,
     name,
     email,
@@ -105,7 +105,9 @@ async function updateUser(req, res) {
     roleId
   );
 
-  res.redirect(`/user/${user.id}?success=${encodeURIComponent('User updated successfully')}`);
+  res.redirect(
+    `/user/${id}/edit?success=${encodeURIComponent('User updated successfully')}`
+  );
 }
 
 async function deleteUser(req, res) {
@@ -115,7 +117,7 @@ async function deleteUser(req, res) {
 
   await userService.deleteUser(id);
 
-  res.redirect('/user?success=' + encodeURIComponent('User deleted successfully'));
+  redirectToListSuccess(res, 'user', 'User deleted successfully');
 }
 
 module.exports = {

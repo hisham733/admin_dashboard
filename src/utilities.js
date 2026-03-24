@@ -106,4 +106,43 @@ async function  passwordHash(password) {
   return  await bcrypt.hash(password, 10);
 }
 
-module.exports = { can, isSuperAdmin, asyncHandler, buildQuery, normalizeQuery, passwordHash }; 
+/**
+ * Canonical list URLs for resources. After create/delete, redirect here.
+ * After successful update, controllers typically redirect to /:id/edit with ?success= instead.
+ */
+const RESOURCE_LIST_PATHS = {
+  user: '/user',
+  role: '/role',
+  form: '/form'
+};
+
+function redirectToList(res, resourceKey) {
+  const path = RESOURCE_LIST_PATHS[resourceKey];
+  if (!path) throw new Error(`Unknown resource list: ${resourceKey}`);
+  res.redirect(path);
+}
+
+function redirectToListSuccess(res, resourceKey, message) {
+  const path = RESOURCE_LIST_PATHS[resourceKey];
+  if (!path) throw new Error(`Unknown resource list: ${resourceKey}`);
+  res.redirect(`${path}?success=${encodeURIComponent(message)}`);
+}
+
+function redirectToListError(res, resourceKey, message) {
+  const path = RESOURCE_LIST_PATHS[resourceKey];
+  if (!path) throw new Error(`Unknown resource list: ${resourceKey}`);
+  res.redirect(`${path}?error=${encodeURIComponent(message)}`);
+}
+
+module.exports = {
+  can,
+  isSuperAdmin,
+  asyncHandler,
+  buildQuery,
+  normalizeQuery,
+  passwordHash,
+  RESOURCE_LIST_PATHS,
+  redirectToList,
+  redirectToListSuccess,
+  redirectToListError
+}; 

@@ -73,7 +73,7 @@ async function storeForm(req, res) {
   if (req.get('Accept')?.includes('application/json')) {
     return res.status(201).json(form);
   }
-  res.redirect('/form/' + form.id + '?success=' + encodeURIComponent('Form template created successfully'));
+  res.redirect('/form?success=' + encodeURIComponent('Form template created successfully'));
 }
 
 async function editForm(req, res) {
@@ -101,7 +101,9 @@ async function updateForm(req, res) {
   if (req.get('Accept')?.includes('application/json')) {
     return res.json(updated);
   }
-  res.redirect('/form/' + updated.id);
+  res.redirect(
+    `/form/${updated.id}/edit?success=${encodeURIComponent('Form template updated successfully')}`
+  );
 }
 
 async function activateForm(req, res) {

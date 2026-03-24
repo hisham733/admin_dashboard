@@ -472,7 +472,7 @@ function submitTemplate() {
     return res.json();
   })
   .then(function() {
-    window.location.href = '/form/' + formId;
+    window.location.href = '/form/' + formId + '/edit?success=' + encodeURIComponent('Form template updated successfully');
   })
   .catch(function(err) {
     showAlert(err.message || 'Failed to save');
