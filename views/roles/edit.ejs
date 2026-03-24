@@ -23,7 +23,8 @@
       </div>
       <div class="form-group">
         <label class="form-label">Permissions</label>
-        <p class="form-hint">Click a section to expand. Use "Select all" to grant every action for that resource.</p>
+        <p class="form-hint">Click a section to expand. Use "Select all" to grant every action for that resource. Where a resource has <strong>List</strong>, select List before View, Create, Update, or Delete.</p>
+        <div id="perm-list-hint" class="alert-inline alert-error" style="display: none; margin-top: 8px;" role="alert"></div>
         <div class="permission-groups">
           <% 
             var resLabels = { dashboard: 'Dashboard', form: 'Forms', permissions: 'Permissions', role: 'Roles', settings: 'Settings', user: 'Users' };
@@ -50,7 +51,7 @@
             <div class="permission-group-body" id="body-<%= safeId %>">
               <% items.forEach(function(p) { %>
                 <label class="permission-check-item">
-                  <input type="checkbox" name="permissionIds" value="<%= p.id %>" class="perm-cb" data-group="<%= safeId %>" <%= p.checked ? 'checked' : '' %>>
+                  <input type="checkbox" name="permissionIds" value="<%= p.id %>" class="perm-cb" data-group="<%= safeId %>" data-perm-name="<%= p.name %>" <%= p.checked ? 'checked' : '' %>>
                   <span><%= p.actionLabel %></span>
                 </label>
               <% }); %>
@@ -69,14 +70,104 @@
 
 <script>
 (function() {
+  var LIST_FIRST_MSG = 'Select the List permission for this resource first (e.g. User List before User View). List only applies together with other actions under the same resource.';
   function toggleGroup(id) {
     var el = document.getElementById('body-' + id);
     if (el) el.classList.toggle('collapsed');
   }
+  /** Resource key: part before ":" in "resource:action" (same resource = same rule scope). */
+  function resourceFromPermName(name) {
+    var i = String(name).indexOf(':');
+    return i === -1 ? String(name) : String(name).slice(0, i);
+  }
+  function actionFromPermName(name) {
+    var i = String(name).indexOf(':');
+    return i === -1 ? '' : String(name).slice(i + 1);
+  }
+  function findListCheckboxForResource(resource) {
+    var cbs = document.querySelectorAll('.perm-cb[data-perm-name]');
+    for (var i = 0; i < cbs.length; i++) {
+      var n = cbs[i].getAttribute('data-perm-name') || '';
+      if (resourceFromPermName(n) === resource && actionFromPermName(n) === 'list') return cbs[i];
+    }
+    return null;
+  }
+  function forEachCheckboxSameResource(resource, fn) {
+    document.querySelectorAll('.perm-cb[data-perm-name]').forEach(function(cb) {
+      var n = cb.getAttribute('data-perm-name') || '';
+      if (resourceFromPermName(n) === resource) fn(cb, n);
+    });
+  }
+  function showListHint() {
+    var el = document.getElementById('perm-list-hint');
+    if (el) {
+      el.textContent = LIST_FIRST_MSG;
+      el.style.display = 'block';
+    }
+  }
+  function hideListHint() {
+    var el = document.getElementById('perm-list-hint');
+    if (el) el.style.display = 'none';
+  }
   function selectAllInGroup(id, checked) {
     document.querySelectorAll('.perm-cb[data-group="' + id + '"]').forEach(function(cb) { cb.checked = checked; });
+    hideListHint();
+  }
+  /** If saved role had other permissions without List (legacy), check List for that same resource. */
+  function syncLegacyListOnLoad() {
+    document.querySelectorAll('.perm-cb[data-perm-name]').forEach(function(cb) {
+      var name = cb.getAttribute('data-perm-name') || '';
+      var resource = resourceFromPermName(name);
+      var listCb = findListCheckboxForResource(resource);
+      if (!listCb || listCb.checked) return;
+      var action = actionFromPermName(name);
+      if (action !== 'list' && cb.checked) listCb.checked = true;
+    });
+  }
+  function bindListFirstRules() {
+    document.querySelectorAll('.perm-cb').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var name = cb.getAttribute('data-perm-name') || '';
+        var resource = resourceFromPermName(name);
+        var action = actionFromPermName(name);
+        var listCb = findListCheckboxForResource(resource);
+        if (!listCb) return;
+        if (action === 'list' && !cb.checked) {
+          forEachCheckboxSameResource(resource, function(other) {
+            var oa = actionFromPermName(other.getAttribute('data-perm-name') || '');
+            if (oa !== 'list') other.checked = false;
+          });
+          hideListHint();
+          return;
+        }
+        if (action !== 'list' && cb.checked && !listCb.checked) {
+          cb.checked = false;
+          showListHint();
+        }
+      });
+    });
+    var form = document.getElementById('roleForm');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        var ok = true;
+        document.querySelectorAll('.perm-cb[data-perm-name]').forEach(function(cb) {
+          if (!cb.checked) return;
+          var n = cb.getAttribute('data-perm-name') || '';
+          var action = actionFromPermName(n);
+          var resource = resourceFromPermName(n);
+          var listCb = findListCheckboxForResource(resource);
+          if (listCb && action !== 'list' && !listCb.checked) ok = false;
+        });
+        if (!ok) {
+          e.preventDefault();
+          showListHint();
+        }
+      });
+    }
   }
   window.toggleGroup = toggleGroup;
   window.selectAllInGroup = selectAllInGroup;
+  bindListFirstRules();
+  syncLegacyListOnLoad();
 })();
 </script>

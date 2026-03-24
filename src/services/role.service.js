@@ -2,6 +2,39 @@ const prisma = require('../configs/prisma');
 const { buildQuery, normalizeQuery } = require('../utilities');
 const VALIDATION_ERROR = require('../errors/validation.error');
 
+/**
+ * For any resource that has a `:list` permission in the DB, disallow selecting
+ * other actions (view, create, …) without also selecting `resource:list`.
+ * Matching is by resource prefix only: `user:view` requires `user:list`, not `role:list`.
+ */
+async function assertListBeforeOtherPermissions(permissionIds) {
+  if (!Array.isArray(permissionIds) || permissionIds.length === 0) return;
+
+  const ids = [...new Set(permissionIds.map(id => Number(id)).filter(n => !Number.isNaN(n)))];
+  const selected = await prisma.permission.findMany({ where: { id: { in: ids } } });
+  const selectedNames = new Set(selected.map(p => p.name));
+
+  const listPerms = await prisma.permission.findMany({
+    where: { name: { endsWith: ':list' } }
+  });
+  const resourcesWithList = new Set(listPerms.map(p => p.name.split(':')[0]));
+
+  for (const p of selected) {
+    const parts = p.name.split(':');
+    const resource = parts[0];
+    const action = parts[1];
+    if (!action || action === 'list') continue;
+    if (!resourcesWithList.has(resource)) continue;
+
+    const listName = `${resource}:list`;
+    if (!selectedNames.has(listName)) {
+      throw new VALIDATION_ERROR(
+        'Select the List permission for the same resource (e.g. user:list before user:view). Other resources are unaffected.'
+      );
+    }
+  }
+}
+
 async function getRoles(query, excludeSuperAdmin = false) {
 
   const { page, perPage, search, orderBy } = normalizeQuery({
@@ -69,6 +102,8 @@ async function storeRole(name, permissionIds = []) {
     delete data.permissions;
   }
 
+  await assertListBeforeOtherPermissions(permissionIds);
+
   return prisma.role.create({
     data,
     include: {
@@ -107,6 +142,7 @@ async function updateRole(id, name = null, permissionIds = null) {
   }
 
   if (Array.isArray(permissionIds)) {
+    await assertListBeforeOtherPermissions(permissionIds);
     data.permissions = {
       set: permissionIds.map(id => ({ id: Number(id) }))
     };
