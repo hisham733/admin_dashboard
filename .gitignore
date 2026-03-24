@@ -4,3 +4,6 @@ node_modules
 
 /src/generated/prisma
 prisma/migrations/
+
+public/uploads/logos/*
+!public/uploads/logos/.gitkeep
